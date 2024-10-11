@@ -12,8 +12,8 @@ const Conversation = require('./models/conversation'); // 대화 기록 스키�
 
 const app = express();
 
-// MongoDB 연결 (옵션 제거)
-mongoose.connect(process.env.MONGO_URI)  // useNewUrlParser 및 useUnifiedTopology 옵션 제거
+// MongoDB 연결
+mongoose.connect(process.env.MONGO_URI)  // MongoDB 연결 문자열
   .then(() => console.log('MongoDB 연결 성공'))
   .catch((error) => {
     console.error('MongoDB 연결 오류:', error);
