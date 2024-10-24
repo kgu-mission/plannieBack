@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 
 // Sequelize 인스턴스 생성
-const sequelize = new Sequelize('planieDB', 'admin', 'qwer1234', {
+const sequelize = new Sequelize('planie', 'admin', 'qwer1234', {
     host: 'database-planie.cr4w208kyjvg.ap-northeast-2.rds.amazonaws.com',  // RDS 엔드포인트
     dialect: 'mariadb',
     dialectOptions: {
