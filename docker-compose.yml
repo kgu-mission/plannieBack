@@ -8,8 +8,13 @@ services:
       - mongo
     environment:
       MONGO_URL: mongodb://mongo:27017/plannerApp
+      DB_HOST: database-planie.cr4w208kyjvg.ap-northeast-2.rds.amazonaws.com  # MariaDB RDS 엔드포인트
+      DB_USER: admin  # MariaDB 사용자
+      DB_PASS: qwer1234  # MariaDB 비밀번호
+      DB_NAME: planieDB  # MariaDB 데이터베이스 이름
+    network_mode: "host"  # EC2 네트워크 인터페이스를 사용
+
   mongo:
     image: mongo
     ports:
       - "27018:27017"
-

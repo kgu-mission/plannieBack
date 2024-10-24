@@ -4,21 +4,25 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const mongoose = require('mongoose');
 const { generatePlan } = require('./openai');  // openai.js에서 가져오기
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const Conversation = require('./models/conversation'); // 대화 기록 스키마 가져오기
+const connectDB = require('./config/mongodb');  // MongoDB 연결 설정 파일
+const sequelize = require('./config/database'); // Sequelize 설정 파일
 
 const app = express();
 
 // MongoDB 연결
-mongoose.connect(process.env.MONGO_URI)  // MongoDB 연결 문자열
-  .then(() => console.log('MongoDB 연결 성공'))
-  .catch((error) => {
-    console.error('MongoDB 연결 오류:', error);
-    process.exit(1);  // DB 연결 실패 시 서버 종료
-  });
+connectDB();
+
+// MySQL/PostgreSQL 연결 및 모델 동기화
+sequelize.sync()
+    .then(() => console.log('MySQL/PostgreSQL 연결 성공'))
+    .catch((error) => {
+      console.error('MySQL/PostgreSQL 연결 오류:', error);
+      process.exit(1);  // DB 연결 실패 시 서버 종료
+    });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -41,14 +45,14 @@ app.post('/create-plan', async (req, res) => {
   try {
     // 기존 대화 기록을 MongoDB에서 불러오기
     let conversation = await Conversation.findOne({ userId: 'default_user' });
-    
+
     if (!conversation) {
       conversation = new Conversation({ userId: 'default_user', conversationHistory: [] });
     }
 
     // OpenAI API를 사용하여 계획을 생성
     const plan = await generatePlan(userInput, conversation.conversationHistory);
-    
+
     // 대화 기록에 사용자 입력과 AI 응답 추가
     conversation.conversationHistory.push({ role: "user", content: userInput });
     conversation.conversationHistory.push({ role: "assistant", content: plan });
@@ -83,4 +87,3 @@ app.listen(3000, function () {
 });
 
 module.exports = app;
-
