@@ -7,7 +7,7 @@ services:
     depends_on:
       - mongo
     environment:
-      MONGO_URL: mongodb://mongo:27017/plannie
+      MONGO_URL: mongodb+srv://missionkinggu:mission21!@plannie.gj2nn.mongodb.net/?retryWrites=true&w=majority&appName=plannie
       DB_HOST: database-planie.cr4w208kyjvg.ap-northeast-2.rds.amazonaws.com  # MariaDB RDS 엔드포인트
       DB_USER: admin  # MariaDB 사용자
       DB_PASS: qwer1234  # MariaDB 비밀번호
