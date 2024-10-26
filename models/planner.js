@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Sequelize 설정 파일 import
 
-const Planner = sequelize.define('Planner', {
+const planner = sequelize.define('Planner', {
     start_day: { type: DataTypes.INTEGER, allowNull: false },
     end_day: { type: DataTypes.INTEGER, allowNull: true },
     title: { type: DataTypes.STRING, allowNull: false },
@@ -13,4 +13,4 @@ const Planner = sequelize.define('Planner', {
     check_box: { type: DataTypes.BOOLEAN, allowNull: false }
 });
 
-module.exports = Planner;
+module.exports = planner;

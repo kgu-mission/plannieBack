@@ -7,9 +7,11 @@ const logger = require('morgan');
 const { generatePlan } = require('./openai');  // openai.js에서 가져오기
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const plannerRouter = require('./routes/planner');  // 새로 만든 planner 라우터 추가
 const Conversation = require('./models/conversation'); // 대화 기록 스키마 가져오기
 const connectDB = require('./config/mongodb');  // MongoDB 연결 설정 파일
 const sequelize = require('./config/database'); // Sequelize 설정 파일
+const Planner = require('./models/planner'); // Planner 모델 불러오기
 
 const app = express();
 
@@ -37,6 +39,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 라우팅 설정
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/planner', plannerRouter);  // /planner 경로에 planner 라우터 연결
 
 // OpenAI를 사용한 계획 생성 라우터
 app.post('/create-plan', async (req, res) => {
