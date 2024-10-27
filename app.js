@@ -14,6 +14,7 @@ const Planner = require('./models/planner');
 const chatRouter = require('./routes/chat');
 const createError = require('http-errors');
 const moment = require('moment');
+const { swaggerUi, swaggerSpec } = require('./swagger');
 
 const app = express();
 
@@ -41,6 +42,8 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/planner', plannerRouter);
 app.use('/chat', chatRouter);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // OpenAI로 일정 관리
 app.post('/process-request', async (req, res) => {
