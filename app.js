@@ -1,17 +1,17 @@
 require('dotenv').config();
-const createError = require('http-errors');
+const axios = require('axios');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const { generatePlan } = require('./openai');  // openai.js에서 가져오기
+const { generatePlan } = require('./openai');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
-const plannerRouter = require('./routes/planner');  // 새로 만든 planner 라우터 추가
-const Conversation = require('./models/conversation'); // 대화 기록 스키마 가져오기
-const connectDB = require('./config/mongodb');  // MongoDB 연결 설정 파일
-const sequelize = require('./config/database'); // Sequelize 설정 파일
-const Planner = require('./models/planner'); // Planner 모델 불러오기
+const plannerRouter = require('./routes/planner');
+const Conversation = require('./models/conversation');
+const connectDB = require('./config/mongodb');
+const sequelize = require('./config/database');
+const Planner = require('./models/planner');
 
 const app = express();
 
@@ -19,20 +19,13 @@ const app = express();
 connectDB();
 
 // MySQL/PostgreSQL 연결 및 모델 동기화
-// sequelize.sync()
-//     .then(() => console.log('MySQL/PostgreSQL 연결 성공'))
-//     .catch((error) => {
-//       console.error('MySQL/PostgreSQL 연결 오류:', error);
-//       process.exit(1);  // DB 연결 실패 시 서버 종료
-//     });
 sequelize.sync({ alter: true })
     .then(() => console.log('MySQL/PostgreSQL 연결 성공 및 테이블 동기화 완료'))
     .catch((error) => {
       console.error('MySQL/PostgreSQL 연결 오류:', error);
-      process.exit(1);  // DB 연결 실패 시 서버 종료
+      process.exit(1);
     });
 
-// view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
@@ -42,55 +35,73 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 라우팅 설정
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/planner', plannerRouter);  // /planner 경로에 planner 라우터 연결
+app.use('/planner', plannerRouter);
 
-// OpenAI를 사용한 계획 생성 라우터
-app.post('/create-plan', async (req, res) => {
-  const userInput = req.body.input;  // 사용자 입력 받기
+app.post('/process-request', async (req, res) => {
+  const userRequest = req.body.request;
 
   try {
-    // 기존 대화 기록을 MongoDB에서 불러오기
-    let conversation = await Conversation.findOne({ userId: 'default_user' });
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: userRequest }]
+    });
 
-    if (!conversation) {
-      conversation = new Conversation({ userId: 'default_user', conversationHistory: [] });
+    // OpenAI의 응답에서 JSON 형식의 내용만 추출
+    const fullText = response.data.choices[0].message.content;
+
+    // JSON 형식의 부분만 추출 (예시: `{`와 `}` 사이의 내용)
+    const jsonMatch = fullText.match(/\{.*\}/s);
+    if (jsonMatch) {
+      const parsedCommand = JSON.parse(jsonMatch[0]);
+
+      if (parsedCommand.action === 'add') {
+        const newPlanner = await Planner.create({
+          title: parsedCommand.title,
+          start_day: parsedCommand.date,
+          start_time: parsedCommand.time,
+        });
+        res.json({ message: '일정이 추가되었습니다.', planner: newPlanner });
+      } else if (parsedCommand.action === 'update') {
+        const planner = await Planner.findByPk(parsedCommand.id);
+        if (planner) {
+          await planner.update({
+            title: parsedCommand.title || planner.title,
+            start_day: parsedCommand.date || planner.start_day,
+            start_time: parsedCommand.time || planner.start_time,
+          });
+          res.json({ message: '일정이 수정되었습니다.', planner });
+        } else {
+          res.status(404).json({ message: "수정할 일정이 없습니다." });
+        }
+      } else if (parsedCommand.action === 'delete') {
+        await Planner.destroy({ where: { id: parsedCommand.id } });
+        res.json({ message: "일정이 삭제되었습니다." });
+      } else {
+        res.status(400).json({ message: "유효하지 않은 명령입니다." });
+      }
+    } else {
+      res.status(400).json({ message: "응답에서 JSON을 찾을 수 없습니다." });
     }
-
-    // OpenAI API를 사용하여 계획을 생성
-    const plan = await generatePlan(userInput, conversation.conversationHistory);
-
-    // 대화 기록에 사용자 입력과 AI 응답 추가
-    conversation.conversationHistory.push({ role: "user", content: userInput });
-    conversation.conversationHistory.push({ role: "assistant", content: plan });
-
-    // 대화 기록을 MongoDB에 저장
-    await conversation.save();
-
-    res.json({ plan: plan });
   } catch (error) {
-    res.status(500).json({ error: "계획 생성 중 오류가 발생했습니다." });
+    res.status(500).json({ message: "명령 처리 중 오류가 발생했습니다.", error: error.message });
   }
 });
 
-// catch 404 and forward to error handler
+
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
-// error handler
 app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
 
-// 서버 실행
 app.listen(3000, function () {
   console.log('서버가 3000번 포트에서 실행 중입니다.');
 });
