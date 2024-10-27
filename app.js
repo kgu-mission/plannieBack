@@ -19,8 +19,14 @@ const app = express();
 connectDB();
 
 // MySQL/PostgreSQL 연결 및 모델 동기화
-sequelize.sync()
-    .then(() => console.log('MySQL/PostgreSQL 연결 성공'))
+// sequelize.sync()
+//     .then(() => console.log('MySQL/PostgreSQL 연결 성공'))
+//     .catch((error) => {
+//       console.error('MySQL/PostgreSQL 연결 오류:', error);
+//       process.exit(1);  // DB 연결 실패 시 서버 종료
+//     });
+sequelize.sync({ alter: true })
+    .then(() => console.log('MySQL/PostgreSQL 연결 성공 및 테이블 동기화 완료'))
     .catch((error) => {
       console.error('MySQL/PostgreSQL 연결 오류:', error);
       process.exit(1);  // DB 연결 실패 시 서버 종료
