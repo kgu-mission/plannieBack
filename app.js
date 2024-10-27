@@ -11,6 +11,7 @@ const Conversation = require('./models/conversation');
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
 const Planner = require('./models/planner');
+const chatRouter = require('./routes/chat');
 const createError = require('http-errors');
 const moment = require('moment');
 
@@ -39,6 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/planner', plannerRouter);
+app.use('/chat', chatRouter);
 
 // OpenAI로 일정 관리
 app.post('/process-request', async (req, res) => {
