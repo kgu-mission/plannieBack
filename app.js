@@ -4,7 +4,6 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const { generatePlan } = require('./openai');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const plannerRouter = require('./routes/planner');
@@ -12,7 +11,7 @@ const Conversation = require('./models/conversation');
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
 const Planner = require('./models/planner');
-const createError = require('http-errors'); // createError 모듈 추가
+const createError = require('http-errors');
 const moment = require('moment');
 
 const app = express();
@@ -41,8 +40,9 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/planner', plannerRouter);
 
+// OpenAI로 일정 관리
 app.post('/process-request', async (req, res) => {
-  const userRequest = `${req.body.request} Please respond only in JSON format with the following structure: { "action": "add", "title": "title_value", "date": "YYYY-MM-DD", "time": "HH:MM", "end_time": "HH:MM", "notification": true, "repeat": 0, "check_box": false }. Make sure the action is one of "add", "update", or "delete".`;
+  const userRequest = `${req.body.request} Please respond only in JSON format with the following structure: { "action": "add" | "update" | "delete", "id": "id_value", "title": "title_value", "date": "YYYY-MM-DD", "time": "HH:MM", "end_time": "HH:MM", "notification": true, "repeat": 0, "check_box": false }.`;
 
   try {
     const response = await axios.post(
@@ -61,31 +61,30 @@ app.post('/process-request', async (req, res) => {
 
     const fullText = response.data.choices[0].message.content;
     const jsonMatch = fullText.match(/\{.*\}/s);
+
     if (jsonMatch) {
       const parsedCommand = JSON.parse(jsonMatch[0]);
 
-      // 날짜 형식 검증
-      if (!moment(parsedCommand.date, 'YYYY-MM-DD', true).isValid()) {
-        return res.status(400).json({ message: "유효하지 않은 날짜 형식입니다.", response: fullText });
-      }
-
+      // 추가
       if (parsedCommand.action === 'add') {
         const newPlanner = await Planner.create({
           title: parsedCommand.title,
-          start_day: parsedCommand.date,
+          start_day: moment(parsedCommand.date, "YYYY-MM-DD").isValid() ? parsedCommand.date : null,
           start_time: parsedCommand.time,
-          end_time: parsedCommand.end_time || '18:00:00', // 기본값
-          notification: parsedCommand.notification ?? true, // 기본값
-          repeat: parsedCommand.repeat ?? 0, // 기본값
-          check_box: parsedCommand.check_box ?? false // 기본값
+          end_time: parsedCommand.end_time,
+          notification: parsedCommand.notification || false,
+          repeat: parsedCommand.repeat || 0,
+          check_box: parsedCommand.check_box || false
         });
         res.json({ message: '일정이 추가되었습니다.', planner: newPlanner });
+
+        // 수정
       } else if (parsedCommand.action === 'update') {
         const planner = await Planner.findByPk(parsedCommand.id);
         if (planner) {
           await planner.update({
             title: parsedCommand.title || planner.title,
-            start_day: parsedCommand.date || planner.start_day,
+            start_day: moment(parsedCommand.date, "YYYY-MM-DD").isValid() ? parsedCommand.date : planner.start_day,
             start_time: parsedCommand.time || planner.start_time,
             end_time: parsedCommand.end_time || planner.end_time,
             notification: parsedCommand.notification ?? planner.notification,
@@ -96,9 +95,16 @@ app.post('/process-request', async (req, res) => {
         } else {
           res.status(404).json({ message: "수정할 일정이 없습니다." });
         }
+
+        // 삭제
       } else if (parsedCommand.action === 'delete') {
-        await Planner.destroy({ where: { id: parsedCommand.id } });
-        res.json({ message: "일정이 삭제되었습니다." });
+        const planner = await Planner.findByPk(parsedCommand.id);
+        if (planner) {
+          await planner.destroy();
+          res.json({ message: "일정이 삭제되었습니다." });
+        } else {
+          res.status(404).json({ message: "삭제할 일정이 없습니다." });
+        }
       } else {
         res.status(400).json({ message: "유효하지 않은 명령입니다.", response: fullText });
       }
