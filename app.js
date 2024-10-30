@@ -1,20 +1,20 @@
 require('dotenv').config();
+const axios = require('axios');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const axios = require('axios');
-const createError = require('http-errors');
-const moment = require('moment');
-
+const { generatePlan } = require('./openai');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const plannerRouter = require('./routes/planner');
-const chatRouter = require('./routes/chat');
+const Conversation = require('./models/conversation');
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
 const Planner = require('./models/planner');
-const { swaggerUi, swaggerSpec } = require('./swagger');
+const createError = require('http-errors'); // createError 모듈 추가
+const moment = require('moment');
+const signupRouter = require('./models/signup'); // 라우터 경로를 본인의 폴더 구조에 맞게 수정하세요.
 
 const app = express();
 
@@ -29,44 +29,101 @@ sequelize.sync({ alter: true })
       process.exit(1);
     });
 
-// 미들웨어 설정
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 라우터 설정
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/planner', plannerRouter);
-app.use('/chat', chatRouter);
+app.use('/api', signupRouter); // /api/signup 경로로 접근
 
-// Swagger API 문서 경로
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// OpenAI로 일정 관리 - 본문 동일
 app.post('/process-request', async (req, res) => {
-  // 내용 생략 - 기존과 동일
+  const userRequest = `${req.body.request} Please respond only in JSON format with the following structure: { "action": "add", "title": "title_value", "date": "YYYY-MM-DD", "time": "HH:MM", "end_time": "HH:MM", "notification": true, "repeat": 0, "check_box": false }. Make sure the action is one of "add", "update", or "delete".`;
+
+  try {
+    const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: userRequest }]
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+    );
+
+    const fullText = response.data.choices[0].message.content;
+    const jsonMatch = fullText.match(/\{.*\}/s);
+    if (jsonMatch) {
+      const parsedCommand = JSON.parse(jsonMatch[0]);
+
+      // 날짜 형식 검증
+      if (!moment(parsedCommand.date, 'YYYY-MM-DD', true).isValid()) {
+        return res.status(400).json({ message: "유효하지 않은 날짜 형식입니다.", response: fullText });
+      }
+
+      if (parsedCommand.action === 'add') {
+        const newPlanner = await Planner.create({
+          title: parsedCommand.title,
+          start_day: parsedCommand.date,
+          start_time: parsedCommand.time,
+          end_time: parsedCommand.end_time || '18:00:00', // 기본값
+          notification: parsedCommand.notification ?? true, // 기본값
+          repeat: parsedCommand.repeat ?? 0, // 기본값
+          check_box: parsedCommand.check_box ?? false // 기본값
+        });
+        res.json({ message: '일정이 추가되었습니다.', planner: newPlanner });
+      } else if (parsedCommand.action === 'update') {
+        const planner = await Planner.findByPk(parsedCommand.id);
+        if (planner) {
+          await planner.update({
+            title: parsedCommand.title || planner.title,
+            start_day: parsedCommand.date || planner.start_day,
+            start_time: parsedCommand.time || planner.start_time,
+            end_time: parsedCommand.end_time || planner.end_time,
+            notification: parsedCommand.notification ?? planner.notification,
+            repeat: parsedCommand.repeat ?? planner.repeat,
+            check_box: parsedCommand.check_box ?? planner.check_box
+          });
+          res.json({ message: '일정이 수정되었습니다.', planner });
+        } else {
+          res.status(404).json({ message: "수정할 일정이 없습니다." });
+        }
+      } else if (parsedCommand.action === 'delete') {
+        await Planner.destroy({ where: { id: parsedCommand.id } });
+        res.json({ message: "일정이 삭제되었습니다." });
+      } else {
+        res.status(400).json({ message: "유효하지 않은 명령입니다.", response: fullText });
+      }
+    } else {
+      res.status(400).json({ message: "응답에서 JSON을 찾을 수 없습니다.", response: fullText });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "명령 처리 중 오류가 발생했습니다.", error: error.message });
+  }
 });
 
-// 404 에러 핸들러
-app.use((req, res, next) => {
-  res.status(404).json({
-    message: "Not Found",
-    status: 404,
-  });
+app.use(function(req, res, next) {
+  next(createError(404));
 });
 
-// 오류 핸들러 (JSON으로 응답)
-app.use((err, req, res, next) => {
-  res.status(err.status || 500).json({
-    message: err.message || "Internal Server Error",
-    status: err.status || 500,
-  });
+app.use(function(err, req, res, next) {
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  res.status(err.status || 500);
+  res.render('error');
 });
 
-// 서버 실행
 app.listen(3000, function () {
   console.log('서버가 3000번 포트에서 실행 중입니다.');
 });
