@@ -1,19 +1,19 @@
 require('dotenv').config();
-const axios = require('axios');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const axios = require('axios');
+const createError = require('http-errors');
+const moment = require('moment');
+
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const plannerRouter = require('./routes/planner');
-const Conversation = require('./models/conversation');
+const chatRouter = require('./routes/chat');
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
 const Planner = require('./models/planner');
-const chatRouter = require('./routes/chat');
-const createError = require('http-errors');
-const moment = require('moment');
 const { swaggerUi, swaggerSpec } = require('./swagger');
 
 const app = express();
@@ -29,20 +29,24 @@ sequelize.sync({ alter: true })
       process.exit(1);
     });
 
+// 뷰 엔진 설정
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// 미들웨어 설정
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 라우터 설정
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/planner', plannerRouter);
 app.use('/chat', chatRouter);
 
+// Swagger API 문서 경로
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // OpenAI로 일정 관리
@@ -53,7 +57,7 @@ app.post('/process-request', async (req, res) => {
     const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
-          model: "gpt-3.5-turbo",
+          model: "ft:gpt-3.5-turbo-0125:personal::A67I2sq4",
           messages: [{ role: "user", content: userRequest }]
         },
         {
@@ -121,6 +125,7 @@ app.post('/process-request', async (req, res) => {
   }
 });
 
+// 404 및 오류 처리
 app.use(function(req, res, next) {
   next(createError(404));
 });
@@ -133,6 +138,7 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+// 서버 실행
 app.listen(3000, function () {
   console.log('서버가 3000번 포트에서 실행 중입니다.');
 });
