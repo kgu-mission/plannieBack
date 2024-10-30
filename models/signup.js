@@ -6,7 +6,7 @@ const router = express.Router();
 // 회원가입 라우터
 router.post('/signup', async (req, res) => {
     try {
-        const { email, password, nickname, name, birth, profileimg, phone, gender, address } = req.body;
+        const { email, password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
 
         // 이메일이 있는지 확인
         if (!email) {
@@ -49,11 +49,11 @@ router.post('/signup', async (req, res) => {
             password: hashedPassword,
             nickname,
             name,
-            birth,
-            profileimg,
             phone,
+            address,
+            birth,
             gender,
-            address
+            profileimg
         });
 
         res.status(201).json({ message: '회원가입 성공!', user: newUser });
