@@ -2,15 +2,14 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Sequelize 설정 파일 import
 
 const User = sequelize.define('User', {
-    id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-    },
-    email: {
+    email: {  // 이메일 필드를 기본 키로 설정
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
+        primaryKey: true, // 기본 키 설정
+        validate: {
+            isEmail: true // 이메일 형식 검증
+        }
     },
     password: {
         type: DataTypes.STRING,

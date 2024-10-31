@@ -1,9 +1,10 @@
 // routes/users.js
+
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');  // User 모델 가져오기
-const bcrypt = require('bcrypt'); // 비밀번호 암호화를 위한 bcrypt
-const jwt = require('jsonwebtoken'); // JWT를 위한 jsonwebtoken 라이브러리
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
+const { generateToken } = require('../utils/jwtHelper'); // jwtHelper에서 토큰 생성 함수 가져오기
 
 /**
  * @swagger
@@ -27,7 +28,7 @@ const jwt = require('jsonwebtoken'); // JWT를 위한 jsonwebtoken 라이브러�
  *               type: string
  *               example: respond with a resource
  */
-router.get('/', function(req, res, next) {
+router.get('/', function(req, res) {
   res.send('respond with a resource');
 });
 
@@ -62,15 +63,12 @@ router.get('/', function(req, res, next) {
 router.post('/register', async (req, res) => {
   const { email, password, nickname } = req.body;
   try {
-    // 이메일 중복 검사
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: '이미 존재하는 이메일입니다.' });
     }
 
-    // 비밀번호 암호화
     const hashedPassword = await bcrypt.hash(password, 10);
-    // 사용자 생성
     const user = await User.create({ email, password: hashedPassword, nickname });
     res.status(201).json({ message: '회원가입 성공', user });
   } catch (error) {
@@ -117,12 +115,7 @@ router.post('/login', async (req, res) => {
     }
 
     // JWT 토큰 생성
-    const token = jwt.sign(
-        { email: user.email },
-        process.env.JWT_SECRET || 'default_secret', // 환경변수 기본값 설정
-        { expiresIn: '1h' }
-    );
-
+    const token = generateToken(user);
     res.setHeader('Authorization', `Bearer ${token}`);
     res.json({ message: '로그인 성공', token });
   } catch (error) {

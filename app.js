@@ -14,7 +14,8 @@ const sequelize = require('./config/database');
 const Planner = require('./models/planner');
 const createError = require('http-errors'); // createError 모듈 추가
 const moment = require('moment');
-const signupRouter = require('./models/signup'); // 라우터 경로를 본인의 폴더 구조에 맞게 수정하세요.
+const signupRouter = require('./routes/signup');
+const userProfileRouter = require('./routes/userProfile');
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/planner', plannerRouter);
 app.use('/api', signupRouter); // /api/signup 경로로 접근
+app.use('/user', userProfileRouter);
 
 app.post('/process-request', async (req, res) => {
   const userRequest = `${req.body.request} Please respond only in JSON format with the following structure: { "action": "add", "title": "title_value", "date": "YYYY-MM-DD", "time": "HH:MM", "end_time": "HH:MM", "notification": true, "repeat": 0, "check_box": false }. Make sure the action is one of "add", "update", or "delete".`;
