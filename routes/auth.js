@@ -1,22 +1,8 @@
-// routes/auth.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const router = express.Router();
-
-// 회원가입
-router.post('/register', async (req, res) => {
-    const { email, password, nickname } = req.body;
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({ email, password: hashedPassword, nickname });
-        res.status(201).json({ message: '회원가입이 완료되었습니다.', user: newUser });
-    } catch (error) {
-        res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.', error });
-    }
-});
 
 // 로그인
 router.post('/login', async (req, res) => {

@@ -12,10 +12,12 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const plannerRouter = require('./routes/planner');
 const signupRouter = require('./routes/signup');
-const userProfileRouter = require('./routes/userProfile');
+const authRouter = require('./routes/auth');               // 로그인 라우터
+const userProfileRouter = require('./routes/userProfile'); // 회원정보 수정 및 탈퇴 라우터
 const processRequestRouter = require('./routes/processRequest');
 
 // 미들웨어 임포트
+const authenticateToken = require('./middlewares/authMiddleware'); // 인증 미들웨어
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -42,12 +44,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 라우터 설정
-app.use('/', indexRouter);                  // 기본 라우터 (홈페이지 등)
-app.use('/users', usersRouter);             // 사용자 관련 라우트
-app.use('/planner', plannerRouter);         // 플래너 관련 라우트
-app.use('/api', signupRouter);              // /api/signup 경로로 접근
-app.use('/user', userProfileRouter);        // /user/update 경로로 접근
-app.use('/process-request', processRequestRouter); // /process-request 경로로 접근
+app.use('/', indexRouter);                       // 기본 라우터 (홈페이지 등)
+app.use('/users', usersRouter);                  // 사용자 관련 라우트
+app.use('/planner', plannerRouter);              // 플래너 관련 라우트
+app.use('/signup', signupRouter);                // 회원가입 라우트
+app.use('/auth', authRouter);                    // 로그인 라우트
+app.use('/user', authenticateToken, userProfileRouter); // 인증 미들웨어 적용된 회원정보 수정 및 탈퇴 라우트
+app.use('/process-request', processRequestRouter);      // /process-request 경로로 접근
 
 // 404 에러 처리 미들웨어
 app.use(notFound);

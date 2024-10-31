@@ -3,15 +3,17 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/User'); // User 모델 가져오기
+const authenticateToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 // 회원 정보 수정 라우터
-router.put('/update', async (req, res) => {
+router.put('/update', authenticateToken, async (req, res) => {
     try {
-        const { email, password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
+        const { password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
+        const userId = req.user.userId; // 토큰에서 추출한 사용자 ID
 
-        // 이메일로 사용자 조회
-        const user = await User.findOne({ where: { email } });
+        // 사용자 조회
+        const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({ error: '수정할 사용자를 찾을 수 없습니다.' });
         }
@@ -41,6 +43,26 @@ router.put('/update', async (req, res) => {
     } catch (error) {
         console.error('회원정보 수정 중 오류:', error);
         res.status(500).json({ error: '회원정보 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+// 회원 탈퇴 라우터 추가
+router.delete('/delete', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId; // 토큰에서 추출한 사용자 ID
+
+        // 사용자 조회
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ error: '삭제할 사용자를 찾을 수 없습니다.' });
+        }
+
+        // 사용자 삭제
+        await user.destroy();
+        res.json({ message: '회원탈퇴가 완료되었습니다.' });
+    } catch (error) {
+        console.error('회원탈퇴 중 오류:', error);
+        res.status(500).json({ error: '회원탈퇴 중 오류가 발생했습니다.' });
     }
 });
 

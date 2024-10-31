@@ -4,7 +4,7 @@ const User = require('../models/User'); // User 모델 가져오기
 const router = express.Router();
 
 // 회원가입 라우터
-router.post('/signup', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { email, password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
 

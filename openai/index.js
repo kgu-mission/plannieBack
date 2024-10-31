@@ -5,7 +5,7 @@ async function getOpenAIResponse(userRequest) {
     const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
-            model: "gpt-3.5-turbo",
+            model: "ft:gpt-4o-mini-2024-07-18:personal::ANrGXQKs",
             messages: [{ role: "user", content: userRequest }]
         },
         {
