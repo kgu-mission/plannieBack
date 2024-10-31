@@ -1,3 +1,5 @@
+// routes/userProfile.js
+
 const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/User'); // User 모델 가져오기
@@ -6,10 +8,10 @@ const router = express.Router();
 // 회원 정보 수정 라우터
 router.put('/update', async (req, res) => {
     try {
-        const { id, password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
+        const { email, password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
 
-        // 이메일이 아닌 ID로 사용자 조회
-        const user = await User.findOne({ where: { email: id } });  // email 필드에 id 값을 사용
+        // 이메일로 사용자 조회
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(404).json({ error: '수정할 사용자를 찾을 수 없습니다.' });
         }

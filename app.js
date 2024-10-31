@@ -39,12 +39,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/planner', plannerRouter);
-app.use('/api', signupRouter); // /api/signup 경로로 접근
-app.use('/user', userProfileRouter);
+// 라우터 설정
+app.use('/', indexRouter);                  // 기본 라우터 (홈페이지 등)
+app.use('/users', usersRouter);             // 사용자 관련 라우트
+app.use('/planner', plannerRouter);         // 플래너 관련 라우트
+app.use('/api', signupRouter);              // /api/signup 경로로 접근
+app.use('/user', userProfileRouter);        // /user/update 경로로 접근
 
+// 특정 요청 처리 예시
 app.post('/process-request', async (req, res) => {
   const userRequest = `${req.body.request} Please respond only in JSON format with the following structure: { "action": "add", "title": "title_value", "date": "YYYY-MM-DD", "time": "HH:MM", "end_time": "HH:MM", "notification": true, "repeat": 0, "check_box": false }. Make sure the action is one of "add", "update", or "delete".`;
 
@@ -114,10 +116,12 @@ app.post('/process-request', async (req, res) => {
   }
 });
 
+// 404 에러 처리 미들웨어
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
+// 에러 처리 미들웨어
 app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
