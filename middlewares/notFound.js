@@ -1,4 +1,3 @@
-// middlewares/notFound.js
 const createError = require('http-errors');
 
 module.exports = function(req, res, next) {
