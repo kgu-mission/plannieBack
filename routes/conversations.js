@@ -1,5 +1,5 @@
 const express = require('express');
-const Conversation = require('../models/conversation'); // Conversation 모델 가져오기
+const Conversation = require('../models/Conversation'); // Conversation 모델 가져오기
 const router = express.Router();
 
 /**

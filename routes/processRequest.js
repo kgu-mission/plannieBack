@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Planner = require('../models/planner');
+const Planner = require('../models/Planner');
 const moment = require('moment');
 const { getOpenAIResponse } = require('../openai');
 

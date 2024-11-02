@@ -1,4 +1,4 @@
-const Planner = require('../models/planner'); // Planner 모델 불러오기
+const Planner = require('../models/Planner'); // Planner 모델 불러오기
 
 // 새로운 일정 생성
 exports.createPlanner = async (req, res) => {
