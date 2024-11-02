@@ -19,6 +19,7 @@ const signupRouter = require('./routes/signup');
 const authRouter = require('./routes/auth');               // 로그인 라우터
 const userProfileRouter = require('./routes/userProfile'); // 회원정보 수정 및 탈퇴 라우터
 const processRequestRouter = require('./routes/processRequest');
+const chatRouter = require('./routes/chat');               // 채팅 라우터 추가
 
 // 미들웨어 임포트
 const authenticateToken = require('./middlewares/authMiddleware'); // 인증 미들웨어
@@ -58,6 +59,7 @@ app.use('/signup', signupRouter);                // 회원가입 라우트
 app.use('/auth', authRouter);                    // 로그인 라우트
 app.use('/user', authenticateToken, userProfileRouter); // 인증 미들웨어 적용된 회원정보 수정 및 탈퇴 라우트
 app.use('/process-request', processRequestRouter);      // /process-request 경로로 접근
+app.use('/chat', chatRouter);                    // 채팅 라우트 추가
 
 // 404 에러 처리 미들웨어
 app.use(notFound);

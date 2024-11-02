@@ -9,10 +9,7 @@ const connectDB = async () => {
         }
 
         // MongoDB에 연결
-        await mongoose.connect(mongoURI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(mongoURI); // useNewUrlParser 및 useUnifiedTopology 제거
         console.log('MongoDB 연결 성공');
     } catch (err) {
         console.error('MongoDB connection error:', err);

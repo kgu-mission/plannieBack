@@ -27,16 +27,12 @@ const router = express.Router();
  *                 description: 사용자 ID
  *               role:
  *                 type: string
- *                 description: 메시지 역할 (예: user 또는 assistant)
+ *                 description: "메시지 역할 (예: user 또는 assistant)"
  *               content:
  *                 type: string
  *                 description: 메시지 내용
- *     responses:
- *       201:
- *         description: 대화가 저장되었습니다.
- *       500:
- *         description: 대화 저장 중 오류가 발생했습니다.
  */
+
 router.post('/conversations', async (req, res) => {
     const { userId, role, content } = req.body;
 
