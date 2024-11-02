@@ -15,7 +15,7 @@ async function generatePlan(userInput, conversationHistory = []) {
     ];
 
     const response = await openai.chat.completions.create({
-      model: "ft:gpt-4o-mini-2024-07-18:personal::ANrGXQKs",
+      model: "ft:gpt-4o-mini-2024-07-18:personal::AP5BFzqE",
       messages: messages,
     });
 
