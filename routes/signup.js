@@ -1,7 +1,9 @@
+// routes/signup.js
+
 const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/User'); // MariaDB User 모델 가져오기
-const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기 (MongoDB User 모델이 별도로 정의되어 있어야 함)
+const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기
 const router = express.Router();
 
 // 회원가입 라우터
@@ -29,7 +31,7 @@ router.post('/', async (req, res) => {
         }
 
         // 이메일 중복 확인 (MongoDB)
-        const existingMongoUser = await MongoUser.findOne({ email });
+        const existingMongoUser = await MongoUser.findOne({ _id: email });
         if (existingMongoUser) {
             return res.status(400).json({ error: '이미 등록된 이메일입니다.' });
         }
@@ -61,9 +63,9 @@ router.post('/', async (req, res) => {
             profileimg
         });
 
-        // MongoDB에 새 사용자 생성 (email, password만 저장)
+        // MongoDB에 새 사용자 생성 (email을 _id로 사용, password만 저장)
         const newMongoUser = new MongoUser({
-            email,
+            _id: email,  // MongoDB에서 _id에 email 저장
             password: hashedPassword
         });
         await newMongoUser.save();
@@ -152,6 +154,5 @@ router.post('/', async (req, res) => {
  *                   type: string
  *                   example: "회원가입 중 오류가 발생했습니다."
  */
-
 
 module.exports = router;
