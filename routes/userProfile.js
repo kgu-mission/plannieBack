@@ -46,6 +46,58 @@ router.put('/update', authenticateToken, async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /user/update:
+ *   put:
+ *     summary: 회원정보 수정
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 description: 새로운 비밀번호
+ *               nickname:
+ *                 type: string
+ *                 description: 새로운 닉네임
+ *               name:
+ *                 type: string
+ *                 description: 새로운 이름
+ *               phone:
+ *                 type: string
+ *                 description: 새로운 전화번호
+ *               address:
+ *                 type: string
+ *                 description: 새로운 주소
+ *               birth:
+ *                 type: string
+ *                 format: date
+ *                 description: 새로운 생년월일
+ *               gender:
+ *                 type: string
+ *                 description: 성별
+ *               profileimg:
+ *                 type: string
+ *                 description: 새로운 프로필 이미지 URL
+ *     responses:
+ *       200:
+ *         description: 회원정보 수정 성공
+ *       401:
+ *         description: 인증 필요 (JWT 토큰 누락)
+ *       404:
+ *         description: 사용자 정보 없음
+ *       500:
+ *         description: 서버 오류
+ */
+
+
 // 회원 탈퇴 라우터 추가
 router.delete('/delete', authenticateToken, async (req, res) => {
     try {
@@ -65,5 +117,25 @@ router.delete('/delete', authenticateToken, async (req, res) => {
         res.status(500).json({ error: '회원탈퇴 중 오류가 발생했습니다.' });
     }
 });
+
+/**
+ * @swagger
+ * /user/delete:
+ *   delete:
+ *     summary: 회원탈퇴
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 회원탈퇴 성공
+ *       401:
+ *         description: 인증 필요 (JWT 토큰 누락)
+ *       404:
+ *         description: 사용자 정보 없음
+ *       500:
+ *         description: 서버 오류
+ */
+
 
 module.exports = router;

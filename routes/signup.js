@@ -63,4 +63,55 @@ router.post('/', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /signup:
+ *   post:
+ *     summary: 회원가입
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: 사용자 이메일
+ *               password:
+ *                 type: string
+ *                 description: 사용자 비밀번호
+ *               nickname:
+ *                 type: string
+ *                 description: 사용자 닉네임
+ *               name:
+ *                 type: string
+ *                 description: 사용자 이름
+ *               phone:
+ *                 type: string
+ *                 description: 사용자 전화번호
+ *               address:
+ *                 type: string
+ *                 description: 사용자 주소
+ *               birth:
+ *                 type: string
+ *                 format: date
+ *                 description: 사용자 생년월일
+ *               gender:
+ *                 type: string
+ *                 description: 사용자 성별
+ *               profileimg:
+ *                 type: string
+ *                 description: 사용자 프로필 이미지 URL
+ *     responses:
+ *       201:
+ *         description: 회원가입 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
+
+
 module.exports = router;

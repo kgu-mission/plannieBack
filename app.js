@@ -7,6 +7,10 @@ const logger = require('morgan');
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
 
+// Swagger 관련 설정
+const swaggerUi = require('swagger-ui-express');
+const { swaggerSpec } = require('./swagger');
+
 // 라우터 임포트
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -30,8 +34,8 @@ connectDB();
 sequelize.sync({ alter: false })
     .then(() => console.log('MySQL/PostgreSQL 연결 성공 및 테이블 동기화 완료'))
     .catch((error) => {
-      console.error('MySQL/PostgreSQL 연결 오류:', error);
-      process.exit(1);
+        console.error('MySQL/PostgreSQL 연결 오류:', error);
+        process.exit(1);
     });
 
 app.set('views', path.join(__dirname, 'views'));
@@ -42,6 +46,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Swagger UI 설정
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // /api-docs 경로에서 Swagger UI 제공
 
 // 라우터 설정
 app.use('/', indexRouter);                       // 기본 라우터 (홈페이지 등)
@@ -59,7 +66,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 app.listen(3000, function () {
-  console.log('서버가 3000번 포트에서 실행 중입니다.');
+    console.log('서버가 3000번 포트에서 실행 중입니다.');
 });
 
 module.exports = app;

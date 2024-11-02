@@ -80,7 +80,7 @@ router.post('/register', async (req, res) => {
  * @swagger
  * /users/login:
  *   post:
- *     summary: 로그인 API
+ *     summary: 로그인
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -91,16 +91,21 @@ router.post('/register', async (req, res) => {
  *             properties:
  *               email:
  *                 type: string
- *                 example: "user@example.com"
+ *                 description: 사용자 이메일
  *               password:
  *                 type: string
- *                 example: "your_password"
+ *                 description: 사용자 비밀번호
  *     responses:
  *       200:
- *         description: 로그인 성공
+ *         description: 로그인 성공 (JWT 토큰 반환)
  *       401:
  *         description: 인증 실패
+ *       404:
+ *         description: 사용자 없음
+ *       500:
+ *         description: 서버 오류
  */
+
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
