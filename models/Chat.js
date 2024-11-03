@@ -1,17 +1,26 @@
 // models/Chat.js
 const mongoose = require('mongoose');
 
-const ChatSchema = new mongoose.Schema({
-    conversationId: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true }, // 대화방 ID
-    participants: [{ userId: String, nickname: String }], // 참여자 정보
-    messages: [{
-        senderId: String,                                   // 송신자 ID
-        message: String,                                    // 메시지 내용
-        timestamp: { type: Date, default: Date.now },       // 전송 시간
-        messageType: { type: String, default: 'text' },     // 메시지 유형 (예: text, image 등)
-        status: { type: String, default: 'sent' }           // 메시지 상태 (예: sent, delivered, read)
-    }]
+const chatSchema = new mongoose.Schema({
+    conversationId: {
+        type: String, // ObjectId에서 String으로 변경
+        required: true,
+        unique: true // 각 대화방의 ID가 고유하도록 설정
+    },
+    participants: [
+        {
+            userId: String,
+            nickname: String
+        }
+    ],
+    messages: [
+        {
+            senderId: String,
+            message: String,
+            messageType: String,
+            timestamp: { type: Date, default: Date.now }
+        }
+    ]
 });
 
-const Chat = mongoose.model('Chat', ChatSchema);
-module.exports = Chat;
+module.exports = mongoose.model('Chat', chatSchema);

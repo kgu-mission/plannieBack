@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose'); // mongoose 임포트
 const Chat = require('../models/Chat'); // Chat 모델 가져오기
 const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/processRequest'); // 일정 처리 함수 임포트
 
@@ -16,7 +15,7 @@ const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/p
  * /chat/send-message:
  *   post:
  *     summary: 대화방에 메시지를 전송합니다.
- *     description: "`senderid`는 메시지를 보낸 사용자의 고유 식별자이며, `nickname`은 채팅 화면에 표시될 사용자명입니다."
+ *     description: "`senderId`는 메시지를 보낸 사용자의 고유 식별자이며, `nickname`은 채팅 화면에 표시될 사용자명입니다."
  *     tags: [Chat]
  *     requestBody:
  *       required: true
@@ -28,9 +27,9 @@ const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/p
  *               conversationId:
  *                 type: string
  *                 description: "대화방의 고유 ID"
- *               senderid:
+ *               senderId:
  *                 type: string
- *                 description: "메시지를 보낸 사용자의 고유 식별자 (예: email 또는 userid)"
+ *                 description: "메시지를 보낸 사용자의 고유 식별자 (예: email)"
  *               message:
  *                 type: string
  *                 description: "보낼 메시지 내용"
@@ -57,23 +56,16 @@ const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/p
  *         description: "서버 오류"
  */
 
-
-
 router.post('/send-message', async (req, res) => {
     const { conversationId, senderId, message, messageType, participants } = req.body;
 
     try {
-        // conversationId를 ObjectId로 변환
-        const convId = mongoose.Types.ObjectId.isValid(conversationId)
-            ? mongoose.Types.ObjectId(conversationId)
-            : new mongoose.Types.ObjectId(); // 유효하지 않은 경우 새 ObjectId 생성
-
         // 1. 새로운 채팅 메시지를 MongoDB에 저장
-        let chat = await Chat.findOne({ conversationId: convId });
+        let chat = await Chat.findOne({ conversationId });
 
         if (!chat) {
             chat = new Chat({
-                conversationId: convId,
+                conversationId,
                 participants,
                 messages: [{ senderId, message, messageType, timestamp: new Date() }]
             });
@@ -88,7 +80,10 @@ router.post('/send-message', async (req, res) => {
         if (message) {
             try {
                 const command = await analyzeUserMessage(message); // 메시지 분석
-                plannerResponse = await executeCalendarCommand(command); // 명령에 따라 일정 처리
+                // 일정 명령어일 때만 executeCalendarCommand를 호출
+                if (command && command.isCalendarCommand) {
+                    plannerResponse = await executeCalendarCommand(command);
+                }
             } catch (error) {
                 console.error("일정 처리 중 오류 발생:", error);
                 plannerResponse = "일정 처리 중 오류가 발생했습니다.";
@@ -119,6 +114,26 @@ router.post('/send-message', async (req, res) => {
  *     responses:
  *       200:
  *         description: 특정 대화방의 메시지 기록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   senderId:
+ *                     type: string
+ *                     description: "메시지 보낸 사용자의 ID"
+ *                   message:
+ *                     type: string
+ *                     description: "메시지 내용"
+ *                   messageType:
+ *                     type: string
+ *                     description: "메시지 타입"
+ *                   timestamp:
+ *                     type: string
+ *                     format: date-time
+ *                     description: "메시지 전송 시간"
  *       404:
  *         description: 대화방을 찾을 수 없습니다.
  *       500:
@@ -127,17 +142,7 @@ router.post('/send-message', async (req, res) => {
 router.get('/messages/:conversationId', async (req, res) => {
     try {
         const conversationId = req.params.conversationId;
-
-        // conversationId를 ObjectId로 변환
-        const convId = mongoose.Types.ObjectId.isValid(conversationId)
-            ? mongoose.Types.ObjectId(conversationId)
-            : null;
-
-        if (!convId) {
-            return res.status(400).json({ message: "유효하지 않은 대화방 ID 형식입니다." });
-        }
-
-        const chat = await Chat.findOne({ conversationId: convId });
+        const chat = await Chat.findOne({ conversationId });
 
         if (chat) {
             res.status(200).json(chat.messages);

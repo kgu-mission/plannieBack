@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
             profileimg
         });
 
-        // MongoDB에 새 사용자 생성 (email을 _id로 사용, password만 저장)
+        // MongoDB에 새 사용자 생성 (email만 저장)
         const newMongoUser = new MongoUser({
             _id: email  // MongoDB에서 _id에 email 저장
         });
@@ -81,7 +81,7 @@ router.post('/', async (req, res) => {
  * /signup:
  *   post:
  *     summary: 회원가입
- *     description: 회원가입 시 사용자의 정보를 MariaDB와 MongoDB에 저장합니다. MongoDB에는 이메일과 암호화된 비밀번호만 저장됩니다.
+ *     description: 회원가입 시 사용자의 정보를 MariaDB와 MongoDB에 저장합니다. MongoDB에는 이메일만 저장됩니다.
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -95,7 +95,7 @@ router.post('/', async (req, res) => {
  *                 description: 사용자 이메일 (MongoDB와 MariaDB에 저장)
  *               password:
  *                 type: string
- *                 description: 사용자 비밀번호 (암호화되어 MongoDB와 MariaDB에 저장)
+ *                 description: 사용자 비밀번호 (암호화되어 MariaDB에만 저장)
  *               nickname:
  *                 type: string
  *                 description: 사용자 닉네임 (MariaDB에 저장)
