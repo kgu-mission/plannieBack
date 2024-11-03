@@ -1,8 +1,7 @@
-// routes/userProfile.js
-
 const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/User'); // MariaDB User 모델 가져오기
+const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기
 const authenticateToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
@@ -45,6 +44,35 @@ router.put('/update', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('회원정보 수정 중 오류:', error);
         res.status(500).json({ error: '회원정보 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+/**
+ * 회원 탈퇴 라우터
+ */
+router.delete('/delete', authenticateToken, async (req, res) => {
+    try {
+        const email = req.user.email; // 토큰에서 추출한 사용자 email
+
+        // MariaDB 사용자 조회
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ error: '삭제할 사용자를 찾을 수 없습니다.' });
+        }
+
+        // MariaDB 사용자 삭제
+        await user.destroy();
+
+        // MongoDB 사용자 삭제
+        const mongoDeleteResult = await MongoUser.deleteOne({ _id: email });
+        if (mongoDeleteResult.deletedCount === 0) {
+            console.warn(`MongoDB에서 해당 사용자를 찾을 수 없었습니다: ${email}`);
+        }
+
+        res.json({ message: '회원탈퇴가 완료되었습니다.' });
+    } catch (error) {
+        console.error('회원탈퇴 중 오류:', error);
+        res.status(500).json({ error: '회원탈퇴 중 오류가 발생했습니다.' });
     }
 });
 
@@ -98,28 +126,6 @@ router.put('/update', authenticateToken, async (req, res) => {
  *       500:
  *         description: 서버 오류
  */
-
-/**
- * 회원 탈퇴 라우터
- */
-router.delete('/delete', authenticateToken, async (req, res) => {
-    try {
-        const email = req.user.email; // 토큰에서 추출한 사용자 email
-
-        // 사용자 조회
-        const user = await User.findOne({ where: { email } });
-        if (!user) {
-            return res.status(404).json({ error: '삭제할 사용자를 찾을 수 없습니다.' });
-        }
-
-        // 사용자 삭제
-        await user.destroy();
-        res.json({ message: '회원탈퇴가 완료되었습니다.' });
-    } catch (error) {
-        console.error('회원탈퇴 중 오류:', error);
-        res.status(500).json({ error: '회원탈퇴 중 오류가 발생했습니다.' });
-    }
-});
 
 /**
  * @swagger
