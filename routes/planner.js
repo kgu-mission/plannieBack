@@ -1,16 +1,19 @@
+// routes/planner.js
 const express = require('express');
 const router = express.Router();
 const plannerController = require('../controllers/plannerController');
 const authenticateToken = require('../middlewares/authMiddleware');
 
 router.use(authenticateToken); // 모든 플래너 라우트에 인증 미들웨어 적용
-router.get('/monthly', plannerController.getPlannersByMonth);
+
 /**
  * @swagger
  * tags:
  *   name: Planner
  *   description: 일정 관리 API
  */
+
+router.get('/monthly', plannerController.getPlannersByMonth);
 
 /**
  * @swagger
@@ -24,9 +27,9 @@ router.get('/monthly', plannerController.getPlannersByMonth);
  *         name: date
  *         schema:
  *           type: string
- *           example: "2024.11.04"
  *         required: true
  *         description: 조회할 날짜 (YYYY.MM.DD 형식)
+ *         example: "2024.11.04"
  *     responses:
  *       200:
  *         description: 성공적으로 조회된 일정 목록
@@ -204,30 +207,28 @@ router.put('/:id', plannerController.updatePlannerById);
  */
 router.delete('/:id', plannerController.deletePlannerById);
 
-
 /**
  * @swagger
  * /planner/monthly:
  *   get:
  *     summary: 특정 년도와 월의 일정 조회
  *     description: 사용자가 지정한 년도와 월에 해당하는 일정을 조회합니다.
- *     tags:
- *       - Planner
+ *     tags: [Planner]
  *     parameters:
  *       - in: query
  *         name: year
  *         required: true
  *         schema:
  *           type: integer
- *           description: 조회할 년도 (예: 2024)
- *           example: 2024
+ *         description: 조회할 년도 (예: 2024)
+ *         example: 2024
  *       - in: query
  *         name: month
  *         required: true
  *         schema:
  *           type: integer
- *           description: 조회할 월 (1부터 12까지의 값, 예: 11)
- *           example: 11
+ *         description: 조회할 월 (1부터 12까지의 값, 예: 11)
+ *         example: 11
  *     responses:
  *       200:
  *         description: 성공적으로 일정이 조회되었습니다.
@@ -288,6 +289,5 @@ router.delete('/:id', plannerController.deletePlannerById);
  *     security:
  *       - bearerAuth: []
  */
-
 
 module.exports = router;

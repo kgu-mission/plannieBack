@@ -11,51 +11,22 @@ const validRepeats = ["안 함", "월", "화", "수", "목", "금", "토", "일"
 // 일정 생성 컨트롤러
 exports.createPlanner = async (req, res) => {
     try {
-        const {
-            start_day,
-            end_day,
-            title,
-            start_time,
-            end_time,
-            memo,
-            notification,
-            repeat,
-            check_box,
-            url
-        } = req.body;
-
-        const parsedStartDay = moment(start_day, 'YYYY.MM.DD', true);
-        const parsedEndDay = end_day ? moment(end_day, 'YYYY.MM.DD', true) : null;
-
-        if (!parsedStartDay.isValid() || (end_day && !parsedEndDay.isValid())) {
-            return res.status(400).json({ error: '올바른 날짜 형식이 아닙니다. YYYY.MM.DD 형식으로 입력하세요.' });
-        }
-
-        // ENUM 값 유효성 검사
-        const notificationValue = validNotifications.includes(notification) ? notification : "안 함";
-        const repeatValue = validRepeats.includes(repeat) ? repeat : "안 함";
+        const { title, start_day, end_day, start_time, end_time } = req.body;
+        const userEmail = req.user.email;
 
         const newPlanner = await Planner.create({
-            start_day: parsedStartDay.format('YYYY-MM-DD'),
-            end_day: parsedEndDay ? parsedEndDay.format('YYYY-MM-DD') : null,
             title,
+            start_day,
+            end_day,
             start_time,
             end_time,
-            memo,
-            notification: notificationValue,
-            repeat: repeatValue,
-            check_box,
-            url,
-            userEmail: req.user.email  // 토큰에서 인증된 사용자 이메일 가져오기
+            userEmail
         });
 
-        res.status(201).json({
-            message: "일정이 생성되었습니다.",
-            planner: newPlanner
-        });
+        res.status(201).json({ message: "일정이 성공적으로 추가되었습니다.", planner: newPlanner });
     } catch (error) {
-        console.error("일정 생성 중 오류 발생:", error.message, error.stack);
-        res.status(500).json({ message: "일정 생성 중 오류가 발생했습니다.", error: error.message });
+        console.error("일정 생성 오류:", error);
+        res.status(500).json({ message: "일정 생성 오류", error });
     }
 };
 
