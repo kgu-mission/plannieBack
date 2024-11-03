@@ -1,8 +1,8 @@
 // routes/chat.js
-// routes/chat.js
 const express = require('express');
 const router = express.Router();
 const Chat = require('../models/Chat');
+const moment = require('moment');
 const { generatePlan } = require('../openai');
 const plannerController = require('../controllers/plannerController');
 
@@ -25,47 +25,29 @@ router.post('/send-message', async (req, res) => {
         }
         chat.messages.push({ senderId, message, timestamp: new Date() });
 
-        // OpenAI 명령어 분석
+        // OpenAI 명령어 분석 및 수동 명령어 감지
         let command = await generatePlan(message);
-        console.log("Command Analysis Result:", command);
 
+        // "내일"이라는 키워드 감지 후 날짜 자동 계산
+        if (command.isCalendarCommand && command.date === "내일") {
+            command.date = moment().add(1, 'days').format('YYYY.MM.DD');
+        }
+
+        // 일정 추가 시 OpenAI로부터 받은 제목을 사용하도록 수정
         let chatResponse;
+        if (command.isCalendarCommand && command.action === 'add') {
+            const result = await plannerController.createPlanner({
+                start_day: command.date,
+                end_day: command.date,
+                title: command.title || "일정", // OpenAI로부터 받은 제목을 사용
+                start_time: command.start_time,
+                end_time: command.end_time,
+                userEmail: senderId
+            });
 
-        if (command.isCalendarCommand) {
-            // 일정 관련 명령어인 경우 MariaDB와 상호작용 수행
-            const { action, date, title, start_time, end_time } = command;
-
-            if (action === 'view') {
-                const planners = await plannerController.getPlannersByDate({
-                    query: { date },
-                    user: { email: senderId }
-                });
-                chatResponse = planners.length > 0
-                    ? `해당 날짜의 일정은 다음과 같습니다:\n${planners.map(planner => `- ${planner.start_time} ~ ${planner.end_time}: ${planner.title}`).join('\n')}`
-                    : '해당 날짜에 일정이 없습니다.';
-            } else if (action === 'add') {
-                const result = await plannerController.createPlanner({
-                    body: { title, start_day: date, end_day: date, start_time, end_time },
-                    user: { email: senderId }
-                });
-                chatResponse = result.message || "일정이 추가되었습니다.";
-            } else if (action === 'update') {
-                const result = await plannerController.updatePlannerById({
-                    params: { id: command.id },
-                    body: { title, start_day: date, start_time, end_time },
-                    user: { email: senderId }
-                });
-                chatResponse = result.message || "일정이 수정되었습니다.";
-            } else if (action === 'delete') {
-                const result = await plannerController.deletePlannerById({
-                    params: { id: command.id },
-                    user: { email: senderId }
-                });
-                chatResponse = result.message || "일정이 삭제되었습니다.";
-            }
+            chatResponse = result.message || result.error || `${command.date}에 ${command.title} 일정이 추가되었습니다.`;
         } else {
-            // 일정 관련 명령어가 아닌 경우 일반 대화 응답 생성
-            chatResponse = "네, 도움이 필요하시면 말씀해주세요!";
+            chatResponse = "네, 제가 어떻게 도와드릴까요? 필요하신 일정이나 계획을 알려주시면 도움을 드리겠습니다!";
         }
 
         // 챗봇의 응답 메시지 추가
@@ -82,7 +64,6 @@ router.post('/send-message', async (req, res) => {
         res.status(500).json({ message: "메시지 저장 중 오류가 발생했습니다.", error });
     }
 });
-
 
 /**
  * @swagger
@@ -105,8 +86,6 @@ router.post('/send-message', async (req, res) => {
  *       200: { description: "메시지 처리 성공" }
  *       500: { description: "서버 오류" }
  */
-
-router.post('/send-message', async (req, res) => { /* 코드 생략 */ });
 
 
 module.exports = router;

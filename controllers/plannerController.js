@@ -9,24 +9,31 @@ const validNotifications = ["안 함", "5분 전", "10분 전", "15분 전", "30
 const validRepeats = ["안 함", "월", "화", "수", "목", "금", "토", "일"];
 
 // 일정 생성 컨트롤러
-exports.createPlanner = async (req, res) => {
+exports.createPlanner = async (data) => {
     try {
-        const { title, start_day, end_day, start_time, end_time } = req.body;
-        const userEmail = req.user.email;
+        const { start_day, end_day, title, start_time, end_time, userEmail } = data;
+
+        // 날짜 형식 변환
+        const parsedStartDay = moment(start_day, 'YYYY.MM.DD', true);
+        const parsedEndDay = end_day ? moment(end_day, 'YYYY.MM.DD', true) : null;
+
+        if (!parsedStartDay.isValid() || (end_day && !parsedEndDay.isValid())) {
+            return { error: '올바른 날짜 형식이 아닙니다. YYYY.MM.DD 형식으로 입력하세요.' };
+        }
 
         const newPlanner = await Planner.create({
+            start_day: parsedStartDay.format('YYYY-MM-DD'),
+            end_day: parsedEndDay ? parsedEndDay.format('YYYY-MM-DD') : null,
             title,
-            start_day,
-            end_day,
             start_time,
             end_time,
             userEmail
         });
 
-        res.status(201).json({ message: "일정이 성공적으로 추가되었습니다.", planner: newPlanner });
+        return { message: "일정이 생성되었습니다.", planner: newPlanner };
     } catch (error) {
-        console.error("일정 생성 오류:", error);
-        res.status(500).json({ message: "일정 생성 오류", error });
+        console.error("일정 생성 오류:", error.message);
+        return { error: "일정 생성 중 오류가 발생했습니다.", details: error.message };
     }
 };
 
