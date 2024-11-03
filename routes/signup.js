@@ -107,6 +107,10 @@ router.post('/', async (req, res) => {
  *               profileimg:
  *                 type: string
  *                 description: 사용자 프로필 이미지 URL (MariaDB에 저장)
+ *               required: # 필수 필드 지정
+ *               - email
+ *               - password
+ *               - nickname
  *     responses:
  *       201:
  *         description: 회원가입 성공
