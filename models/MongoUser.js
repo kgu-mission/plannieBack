@@ -1,22 +1,20 @@
 // models/MongoUser.js
 const mongoose = require('mongoose');
 
-// MongoDB User 스키마 정의 (email과 createdAt 필드 포함)
+// MongoDB User 스키마 정의 (email만 저장)
 const mongoUserSchema = new mongoose.Schema({
     _id: {
         type: String,
-        required: true
+        required: true,
     },
     email: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     createdAt: {
         type: Date,
         default: Date.now
     }
-}, { _id: false }); // _id 필드를 email로 대체하고 별도로 인덱싱하지 않도록 설정
+}, { _id: false });
 
-// MongoDB User 모델 생성
 module.exports = mongoose.model('MongoUser', mongoUserSchema);

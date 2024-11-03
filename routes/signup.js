@@ -6,19 +6,27 @@ const User = require('../models/User'); // MariaDB User 모델 가져오기
 const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기
 const router = express.Router();
 
+// 요청이 JSON 형식인지 확인하는 미들웨어
+router.use((req, res, next) => {
+    if (req.is('application/json')) {
+        next();
+    } else {
+        res.status(400).json({ error: 'Content-Type은 application/json이어야 합니다.' });
+    }
+});
+
 router.post('/', async (req, res) => {
     try {
+        console.log("Received data:", req.body);  // 요청 바디 확인용 로그
         const { email, password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
 
         // 필수 항목 확인
         if (!email) {
             return res.status(400).json({ error: '이메일을 입력해주세요.' });
         }
-
         if (!password) {
             return res.status(400).json({ error: '비밀번호를 입력해주세요.' });
         }
-
         if (!nickname) {
             return res.status(400).json({ error: '닉네임을 입력해주세요.' });
         }
@@ -30,7 +38,7 @@ router.post('/', async (req, res) => {
         }
 
         // MongoDB에서 이메일 중복 확인
-        const existingMongoUser = await MongoUser.findOne({ email });
+        const existingMongoUser = await MongoUser.findOne({ _id: email });
         if (existingMongoUser) {
             return res.status(400).json({ error: '이미 등록된 이메일입니다.' });
         }
@@ -57,6 +65,7 @@ router.post('/', async (req, res) => {
             email: email
         });
         await newMongoUser.save();
+        console.log("MongoDB에 사용자 저장 성공:", newMongoUser); // 저장 성공 로그
 
         res.status(201).json({ message: '회원가입 성공!', user: newUser });
     } catch (error) {
@@ -81,32 +90,17 @@ router.post('/', async (req, res) => {
  *             properties:
  *               email:
  *                 type: string
- *                 description: 사용자 이메일 (MongoDB와 MariaDB에 저장)
+ *                 description: "사용자 이메일 (필수)"
  *               password:
  *                 type: string
- *                 description: 사용자 비밀번호 (암호화되어 MariaDB에만 저장)
+ *                 description: "사용자 비밀번호 (필수)"
  *               nickname:
  *                 type: string
- *                 description: 사용자 닉네임 (MariaDB에 저장)
- *               name:
- *                 type: string
- *                 description: 사용자 이름 (MariaDB에 저장)
- *               phone:
- *                 type: string
- *                 description: 사용자 전화번호 (MariaDB에 저장)
- *               address:
- *                 type: string
- *                 description: 사용자 주소 (MariaDB에 저장)
- *               birth:
- *                 type: string
- *                 format: date
- *                 description: 사용자 생년월일 (MariaDB에 저장)
- *               gender:
- *                 type: string
- *                 description: 사용자 성별 (MariaDB에 저장)
- *               profileimg:
- *                 type: string
- *                 description: 사용자 프로필 이미지 URL (MariaDB에 저장)
+ *                 description: "사용자 닉네임 (필수)"
+ *             required: # 필수 필드 지정
+ *               - email
+ *               - password
+ *               - nickname
  *     responses:
  *       201:
  *         description: 회원가입 성공

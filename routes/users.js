@@ -35,50 +35,6 @@ router.get('/', function(req, res) {
 
 /**
  * @swagger
- * /users/register:
- *   post:
- *     summary: 회원가입 API
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: "user@example.com"
- *               password:
- *                 type: string
- *                 example: "your_password"
- *               nickname:
- *                 type: string
- *                 example: "nickname"
- *     responses:
- *       201:
- *         description: 회원가입 성공
- *       400:
- *         description: 잘못된 요청
- */
-router.post('/register', async (req, res) => {
-  const { email, password, nickname } = req.body;
-  try {
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: '이미 존재하는 이메일입니다.' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, password: hashedPassword, nickname });
-    res.status(201).json({ message: '회원가입 성공', user });
-  } catch (error) {
-    res.status(500).json({ message: '회원가입 실패', error: error.message });
-  }
-});
-
-/**
- * @swagger
  * /users/login:
  *   post:
  *     summary: 로그인
@@ -106,7 +62,6 @@ router.post('/register', async (req, res) => {
  *       500:
  *         description: 서버 오류
  */
-
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -131,6 +86,5 @@ router.post('/login', async (req, res) => {
 
 // 이메일로 사용자 존재 여부 확인 라우트
 router.get('/check/:email', userController.checkUserEmail);
-
 
 module.exports = router;

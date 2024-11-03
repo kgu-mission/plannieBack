@@ -7,21 +7,19 @@ const logger = require('morgan');
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
 
-// Swagger 관련 설정
+// Swagger 설정
 const swaggerUi = require('swagger-ui-express');
 const { swaggerSpec } = require('./swagger');
 
 // 라우터 임포트
-
-
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const plannerRouter = require('./routes/planner');
 const signupRouter = require('./routes/signup');
-const authRouter = require('./routes/auth');               // 로그인 라우터
-const userProfileRouter = require('./routes/userProfile'); // 회원정보 수정 및 탈퇴 라우터
+const authRouter = require('./routes/auth');                // 로그인 라우터
+const userProfileRouter = require('./routes/userProfile');  // 회원정보 수정 및 탈퇴 라우터
 const processRequestRouter = require('./routes/processRequest');
-const chatRouter = require('./routes/chat');               // 채팅 라우터 추가
+const chatRouter = require('./routes/chat');                // 채팅 라우터 추가
 
 // 미들웨어 임포트
 const authenticateToken = require('./middlewares/authMiddleware'); // 인증 미들웨어
@@ -31,7 +29,7 @@ const errorHandler = require('./middlewares/errorHandler');
 const app = express();
 
 // MongoDB 연결
-connectDB();
+connectDB(); // MongoDB 연결이 확실히 성공했는지 확인
 
 // MySQL/PostgreSQL 연결 및 모델 동기화
 sequelize.sync({ alter: false })
@@ -69,8 +67,9 @@ app.use(notFound);
 // 에러 처리 미들웨어
 app.use(errorHandler);
 
-app.listen(3000, function () {
-    console.log('서버가 3000번 포트에서 실행 중입니다.');
+const PORT = process.env.PORT || 3000; // 동적 포트 설정
+app.listen(PORT, function () {
+    console.log(`서버가 ${PORT}번 포트에서 실행 중입니다.`);
 });
 
 module.exports = app;
