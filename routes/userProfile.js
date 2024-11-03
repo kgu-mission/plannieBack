@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const User = require('../models/User'); // MariaDB User 모델 가져오기
 const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기
+const Chat = require('../models/Chat'); // MongoDB Chat 모델 가져오기
 const authenticateToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
@@ -69,7 +70,13 @@ router.delete('/delete', authenticateToken, async (req, res) => {
             console.warn(`MongoDB에서 해당 사용자를 찾을 수 없었습니다: ${email}`);
         }
 
-        res.json({ message: '회원탈퇴가 완료되었습니다.' });
+        // MongoDB에서 채팅방 삭제
+        const chatDeleteResult = await Chat.deleteOne({ "participants.userId": email });
+        if (chatDeleteResult.deletedCount === 0) {
+            console.warn(`MongoDB에서 해당 사용자의 채팅방을 찾을 수 없었습니다: ${email}`);
+        }
+
+        res.json({ message: '회원탈퇴가 완료되었습니다. 관련된 채팅방도 삭제되었습니다.' });
     } catch (error) {
         console.error('회원탈퇴 중 오류:', error);
         res.status(500).json({ error: '회원탈퇴 중 오류가 발생했습니다.' });
