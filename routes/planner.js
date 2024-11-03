@@ -205,5 +205,3 @@ router.get('/month/:year/:month', async (req, res) => {
 });
 
 module.exports = router;
-
-module.exports = router;
