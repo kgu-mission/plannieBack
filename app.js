@@ -6,6 +6,8 @@ const logger = require('morgan');
 
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
+const cors = require('cors');
+
 
 // Swagger 설정
 const swaggerUi = require('swagger-ui-express');
@@ -41,7 +43,7 @@ sequelize.sync({ alter: false })
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
+app.use(cors()); // 모든 요청에 대해 CORS를 허용
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
