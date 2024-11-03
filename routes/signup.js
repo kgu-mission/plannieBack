@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const moment = require('moment-timezone'); // moment-timezone 가져오기
 const User = require('../models/User'); // MariaDB User 모델 가져오기
 const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기
 const Chat = require('../models/Chat'); // MongoDB Chat 모델 가져오기
@@ -42,6 +43,9 @@ router.post('/', async (req, res) => {
         // 비밀번호 암호화
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // 한국 시간대로 변환하여 생일 저장
+        const formattedBirth = birth ? moment.tz(birth, "Asia/Seoul").format("YYYY-MM-DD HH:mm:ss") : null;
+
         // MariaDB에 새 사용자 생성
         const newUser = await User.create({
             email,
@@ -50,7 +54,7 @@ router.post('/', async (req, res) => {
             name,
             phone,
             address,
-            birth,
+            birth: formattedBirth, // 변환된 생일
             gender,
             profileimg
         });
@@ -75,7 +79,6 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: '회원가입 중 오류가 발생했습니다.' });
     }
 });
-
 /**
  * @swagger
  * /signup:

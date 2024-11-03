@@ -179,7 +179,8 @@ exports.deletePlannerById = async (req, res) => {
 // 특정 년도와 월에 대한 일정 조회 컨트롤러
 exports.getPlannersByMonth = async (req, res) => {
     const { year, month } = req.query;
-    const userEmail = req.user.email;
+    const userEmail = req.user ? req.user.email : null;
+    console.log("User Email:", userEmail);
 
     try {
         // 년도와 월의 유효성 검사

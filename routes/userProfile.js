@@ -9,42 +9,59 @@ const router = express.Router();
 /**
  * 회원 정보 수정 라우터
  */
-router.put('/update', authenticateToken, async (req, res) => {
+router.get('/profile', authenticateToken, async (req, res) => {
     try {
-        const { password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
-        const email = req.user.email; // 토큰에서 추출한 사용자 email
+        res.set('Cache-Control', 'no-store'); // 캐시 비활성화
 
-        // 사용자 조회
-        const user = await User.findOne({ where: { email } });
+        const user = req.user ? req.user.email : null;
+
         if (!user) {
-            return res.status(404).json({ error: '수정할 사용자를 찾을 수 없습니다.' });
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
-        // 비밀번호 유효성 검사 및 암호화
-        if (password) {
-            if (password.length < 8) {
-                return res.status(400).json({ error: '비밀번호는 최소 8자 이상이어야 합니다.' });
-            }
-            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).+$/;
-            if (!passwordRegex.test(password)) {
-                return res.status(400).json({ error: '비밀번호는 영문자, 숫자, 특수문자를 포함해야 합니다.' });
-            }
-            user.password = await bcrypt.hash(password, 10);
-        }
-        if (nickname) user.nickname = nickname;
-        if (name) user.name = name;
-        if (phone) user.phone = phone;
-        if (address) user.address = address;
-        if (birth) user.birth = birth;
-        if (gender) user.gender = gender;
-        if (profileimg) user.profileimg = profileimg;
+        const userProfile = await User.findOne({ where: { email: user } });
 
-        // 변경 사항 저장
-        await user.save();
-        res.json({ message: '회원정보가 수정되었습니다.', user });
+        if (!userProfile) {
+            return res.status(404).json({ message: '사용자 정보를 찾을 수 없습니다.' });
+        }
+
+        res.status(200).json({
+            email: userProfile.email,
+            nickname: userProfile.nickname,
+            name: userProfile.name,
+            birth: userProfile.birth,
+            profileimg: userProfile.profileimg,
+            phone: userProfile.phone,
+            gender: userProfile.gender,
+            address: userProfile.address,
+        });
     } catch (error) {
-        console.error('회원정보 수정 중 오류:', error);
-        res.status(500).json({ error: '회원정보 수정 중 오류가 발생했습니다.' });
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: '사용자 정보를 가져오는 데 실패했습니다.' });
+    }
+});
+
+
+// 사용자 프로필 정보 수정 (PUT /user/update)
+router.put('/update', authenticateToken, async (req, res) => {
+    const { nickname, password, name, phone, address, birth, gender, profileimg } = req.body;
+
+    try {
+        // 사용자 정보 업데이트
+        const [updated] = await User.update(
+            { nickname, password, name, phone, address, birth, gender, profileimg },
+            { where: { email: req.user.email } }
+        );
+
+        if (updated) {
+            const updatedUser = await User.findOne({ where: { email: req.user.email } });
+            res.status(200).json({ message: '사용자 정보가 성공적으로 업데이트되었습니다.', user: updatedUser });
+        } else {
+            res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ message: '사용자 정보를 업데이트하는 데 실패했습니다.' });
     }
 });
 
