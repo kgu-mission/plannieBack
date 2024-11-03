@@ -5,6 +5,7 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../utils/jwtHelper'); // jwtHelper에서 토큰 생성 함수 가져오기
+const userController = require('../controllers/userController');
 
 /**
  * @swagger
@@ -127,5 +128,9 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: '로그인 처리 중 오류가 발생했습니다.', error: error.message });
   }
 });
+
+// 이메일로 사용자 존재 여부 확인 라우트
+router.get('/check/:email', userController.checkUserEmail);
+
 
 module.exports = router;

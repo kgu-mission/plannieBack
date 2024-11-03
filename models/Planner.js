@@ -2,17 +2,16 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Sequelize 설정 파일 import
 const moment = require('moment'); // 날짜 포맷팅을 위해 moment 라이브러리 사용
 
-const planner = sequelize.define('Planner', {
+const Planner = sequelize.define('Planner', {
     start_day: {
         type: DataTypes.DATEONLY,
         allowNull: false,
         defaultValue: DataTypes.NOW,
         get() {
             const rawValue = this.getDataValue('start_day');
-            return rawValue ? moment(rawValue).format('YYYY.MM.DD dddd') : null; // "YYYY.MM.DD EEEE" 형식으로 반환
+            return rawValue ? moment(rawValue).format('YYYY.MM.DD dddd') : null;
         },
         set(value) {
-            // "YYYY.MM.DD EEEE" 형식이 들어왔을 때 "YYYY-MM-DD"로 변환하여 저장
             const parsedDate = moment(value, 'YYYY.MM.DD dddd').format('YYYY-MM-DD');
             this.setDataValue('start_day', parsedDate);
         }
@@ -61,12 +60,16 @@ const planner = sequelize.define('Planner', {
     check_box: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false // 내가(서진이가) 맘대로 써놓음 이 한 줄은
+        defaultValue: false
     },
     url: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    userEmail: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
 });
 
-module.exports = planner;
+module.exports = Planner;

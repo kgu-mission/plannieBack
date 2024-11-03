@@ -59,7 +59,7 @@ const plannerController = require('../controllers/plannerController');
  *       500:
  *         description: 일정 생성 중 오류가 발생했습니다.
  */
-router.post('/add', plannerController.createPlanner);
+
 
 /**
  * @swagger
@@ -82,7 +82,7 @@ router.post('/add', plannerController.createPlanner);
  *       500:
  *         description: 일정 조회 중 오류가 발생했습니다.
  */
-router.get('/:id', plannerController.getPlannerById);
+
 
 /**
  * @swagger
@@ -143,7 +143,7 @@ router.get('/:id', plannerController.getPlannerById);
  *       500:
  *         description: 일정 수정 중 오류가 발생했습니다.
  */
-router.put('/:id', plannerController.updatePlannerById);
+
 
 /**
  * @swagger
@@ -166,6 +166,9 @@ router.put('/:id', plannerController.updatePlannerById);
  *       500:
  *         description: 일정 삭제 중 오류가 발생했습니다.
  */
+router.post('/add', plannerController.createPlanner);
+router.get('/:id', plannerController.getPlannerById);
+router.put('/:id', plannerController.updatePlannerById);
 router.delete('/:id', plannerController.deletePlannerById);
 
 module.exports = router;
