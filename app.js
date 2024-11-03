@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const cors = require('cors');
 
 const connectDB = require('./config/mongodb');
 const sequelize = require('./config/database');
@@ -27,6 +28,7 @@ const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
+app.use(cors()); // 모든 요청에 대해 CORS를 허용
 
 // MongoDB 연결
 connectDB(); // MongoDB 연결이 확실히 성공했는지 확인

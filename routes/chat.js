@@ -50,6 +50,20 @@ const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/p
  *     responses:
  *       200:
  *         description: "메시지 전송 성공"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: "전송 상태 메시지"
+ *                 chat:
+ *                   type: object
+ *                   description: "저장된 채팅 메시지 정보"
+ *                 plannerResponse:
+ *                   type: string
+ *                   description: "일정 관련 응답 메시지"
  *       400:
  *         description: "잘못된 요청"
  *       500:
@@ -82,7 +96,7 @@ router.post('/send-message', async (req, res) => {
                 const command = await analyzeUserMessage(message); // 메시지 분석
                 // 일정 명령어일 때만 executeCalendarCommand를 호출
                 if (command && command.isCalendarCommand) {
-                    plannerResponse = await executeCalendarCommand(command);
+                    plannerResponse = await executeCalendarCommand(command, senderId); // senderId를 userEmail로 사용
                 }
             } catch (error) {
                 console.error("일정 처리 중 오류 발생:", error);

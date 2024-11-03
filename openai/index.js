@@ -1,4 +1,3 @@
-// openai/index.js
 const axios = require('axios');
 
 async function getOpenAIResponse(userRequest) {
@@ -6,7 +5,8 @@ async function getOpenAIResponse(userRequest) {
         'https://api.openai.com/v1/chat/completions',
         {
             model: "ft:gpt-4o-mini-2024-07-18:personal::AP5BFzqE",
-            messages: [{ role: "user", content: userRequest }]
+            messages: [{ role: "user", content: userRequest }],
+            temperature: 0.5 // 필요에 따라 설정
         },
         {
             headers: {
