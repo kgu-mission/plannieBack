@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const plannerController = require('../controllers/plannerController');
-
+const Planner = require('../models/Planner');
+const { Op } = require('sequelize');
 /**
  * @swagger
  * tags:
@@ -170,5 +171,39 @@ router.post('/add', plannerController.createPlanner);
 router.get('/:id', plannerController.getPlannerById);
 router.put('/:id', plannerController.updatePlannerById);
 router.delete('/:id', plannerController.deletePlannerById);
+// 특정 월의 일정 조회
+router.get('/month/:year/:month', async (req, res) => {
+    const { year, month } = req.params;
+
+    // 해당 월의 시작일과 마지막 일 계산
+    const startDate = `${year}-${month.padStart(2, '0')}-01`;
+    const endDate = `${year}-${month.padStart(2, '0')}-31`;
+
+    try {
+        const schedules = await Planner.findAll({
+            where: {
+                [Op.or]: [
+                    {
+                        start_day: {
+                            [Op.between]: [startDate, endDate]
+                        }
+                    },
+                    {
+                        end_day: {
+                            [Op.between]: [startDate, endDate]
+                        }
+                    }
+                ]
+            },
+            order: [['start_day', 'ASC'], ['start_time', 'ASC']]
+        });
+        res.status(200).json(schedules);
+    } catch (error) {
+        console.error('일정 조회 오류:', error);
+        res.status(500).json({ message: '일정 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+module.exports = router;
 
 module.exports = router;

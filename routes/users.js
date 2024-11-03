@@ -6,6 +6,7 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../utils/jwtHelper'); // jwtHelper에서 토큰 생성 함수 가져오기
 const userController = require('../controllers/userController');
+const authenticateToken = require('../middlewares/authMiddleware');
 
 /**
  * @swagger
@@ -81,6 +82,15 @@ router.post('/login', async (req, res) => {
     res.json({ message: '로그인 성공', token });
   } catch (error) {
     res.status(500).json({ message: '로그인 처리 중 오류가 발생했습니다.', error: error.message });
+  }
+});
+// 인증된 사용자의 닉네임을 가져오는 라우트
+router.get('/profile', authenticateToken, (req, res) => {
+  try {
+    res.status(200).json({ nickname: req.user.nickname });
+  } catch (error) {
+    console.error('사용자 닉네임 조회 에러:', error);
+    res.status(500).json({ message: '사용자 정보를 가져오는 중 오류가 발생했습니다.' });
   }
 });
 
