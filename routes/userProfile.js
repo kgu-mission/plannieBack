@@ -2,23 +2,25 @@
 
 const express = require('express');
 const bcrypt = require('bcrypt');
-const User = require('../models/User'); // User 모델 가져오기
+const User = require('../models/User'); // MariaDB User 모델 가져오기
 const authenticateToken = require('../middlewares/authMiddleware');
 const router = express.Router();
 
-// 회원 정보 수정 라우터
+/**
+ * 회원 정보 수정 라우터
+ */
 router.put('/update', authenticateToken, async (req, res) => {
     try {
         const { password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
-        const userId = req.user.userId; // 토큰에서 추출한 사용자 ID
+        const email = req.user.email; // 토큰에서 추출한 사용자 email
 
         // 사용자 조회
-        const user = await User.findByPk(userId);
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(404).json({ error: '수정할 사용자를 찾을 수 없습니다.' });
         }
 
-        // 필요한 경우 수정할 필드만 업데이트
+        // 비밀번호 유효성 검사 및 암호화
         if (password) {
             if (password.length < 8) {
                 return res.status(400).json({ error: '비밀번호는 최소 8자 이상이어야 합니다.' });
@@ -97,14 +99,15 @@ router.put('/update', authenticateToken, async (req, res) => {
  *         description: 서버 오류
  */
 
-
-// 회원 탈퇴 라우터 추가
+/**
+ * 회원 탈퇴 라우터
+ */
 router.delete('/delete', authenticateToken, async (req, res) => {
     try {
-        const userId = req.user.userId; // 토큰에서 추출한 사용자 ID
+        const email = req.user.email; // 토큰에서 추출한 사용자 email
 
         // 사용자 조회
-        const user = await User.findByPk(userId);
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             return res.status(404).json({ error: '삭제할 사용자를 찾을 수 없습니다.' });
         }
@@ -136,6 +139,5 @@ router.delete('/delete', authenticateToken, async (req, res) => {
  *       500:
  *         description: 서버 오류
  */
-
 
 module.exports = router;
