@@ -204,4 +204,91 @@ router.put('/:id', plannerController.updatePlannerById);
  */
 router.delete('/:id', plannerController.deletePlannerById);
 
+
+/**
+ * @swagger
+ * /planner/monthly:
+ *   get:
+ *     summary: 특정 년도와 월의 일정 조회
+ *     description: 사용자가 지정한 년도와 월에 해당하는 일정을 조회합니다.
+ *     tags:
+ *       - Planner
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: 조회할 년도 (예: 2024)
+ *           example: 2024
+ *       - in: query
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: 조회할 월 (1부터 12까지의 값, 예: 11)
+ *           example: 11
+ *     responses:
+ *       200:
+ *         description: 성공적으로 일정이 조회되었습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: 일정 ID
+ *                   title:
+ *                     type: string
+ *                     description: 일정 제목
+ *                   start_day:
+ *                     type: string
+ *                     format: date
+ *                     description: 일정 시작 날짜
+ *                   start_time:
+ *                     type: string
+ *                     format: time
+ *                     description: 일정 시작 시간
+ *                   end_time:
+ *                     type: string
+ *                     format: time
+ *                     description: 일정 종료 시간
+ *                   userEmail:
+ *                     type: string
+ *                     format: email
+ *                     description: 사용자 이메일
+ *       400:
+ *         description: 잘못된 요청입니다. 요청 파라미터가 유효하지 않습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: 오류 메시지
+ *                   example: "올바른 년도 및 월 형식이 아닙니다. YYYY와 MM 형식으로 입력하세요."
+ *       500:
+ *         description: 서버 오류가 발생했습니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: 오류 메시지
+ *                   example: "월간 일정 조회 중 오류가 발생했습니다."
+ *                 error:
+ *                   type: string
+ *                   description: 상세 오류 메시지
+ *     security:
+ *       - bearerAuth: []
+ */
+// 특정 월의 일정 조회 라우트
+router.get('/monthly', plannerController.getPlannersByMonth);
+
 module.exports = router;

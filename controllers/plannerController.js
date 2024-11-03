@@ -1,5 +1,6 @@
 const Planner = require('../models/planner');
 const moment = require('moment');
+const {Op} = require("sequelize");
 moment.locale('ko'); // 로케일 설정
 
 // 유효한 ENUM 값 설정
@@ -174,3 +175,38 @@ exports.deletePlannerById = async (req, res) => {
         res.status(500).json({ message: "일정 삭제 중 오류가 발생했습니다." });
     }
 };
+
+// 특정 년도와 월에 대한 일정 조회 컨트롤러
+exports.getPlannersByMonth = async (req, res) => {
+    const { year, month } = req.query; // 클라이언트로부터 년도와 월을 쿼리 파라미터로 받음
+    const userEmail = req.user.email;
+
+    try {
+        // 년도와 월의 유효성 검사
+        if (!year || !month || !moment(`${year}-${month}`, 'YYYY-MM', true).isValid()) {
+            return res.status(400).json({ error: '올바른 년도 및 월 형식이 아닙니다. YYYY와 MM 형식으로 입력하세요.' });
+        }
+
+        // 해당 월의 첫날과 마지막 날 계산
+        const startOfMonth = moment(`${year}-${month}`, 'YYYY-MM').startOf('month').format('YYYY-MM-DD');
+        const endOfMonth = moment(`${year}-${month}`, 'YYYY-MM').endOf('month').format('YYYY-MM-DD');
+
+        // 데이터베이스에서 해당 월에 해당하는 일정 조회
+        const planners = await Planner.findAll({
+            where: {
+                start_day: {
+                    [Op.between]: [startOfMonth, endOfMonth],
+                },
+                userEmail
+            },
+            order: [['start_day', 'ASC'], ['start_time', 'ASC']]
+        });
+
+        // 조회된 일정이 없을 경우
+        res.status(200).json(planners.length > 0 ? planners : { message: '해당 월에 일정이 없습니다.' });
+    } catch (error) {
+        console.error("월간 일정 조회 중 오류 발생:", error.message, error.stack);
+        res.status(500).json({ message: "월간 일정 조회 중 오류가 발생했습니다.", error: error.message });
+    }
+};
+
