@@ -1,21 +1,24 @@
+// routes/chat.js
 const express = require('express');
 const router = express.Router();
-const Chat = require('../models/Chat'); // Chat 모델 가져오기
-const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/processRequest'); // 일정 처리 함수 임포트
+const Chat = require('../models/Chat');
+const { analyzeUserMessage } = require('../controllers/processRequest');
+const { generatePlan } = require('../openai');
+const plannerController = require('../controllers/plannerController');
 
 /**
  * @swagger
  * tags:
  *   name: Chat
- *   description: 채팅 API
+ *   description: 채팅 및 일정 관리 API
  */
 
 /**
  * @swagger
  * /chat/send-message:
  *   post:
- *     summary: 대화방에 메시지를 전송합니다.
- *     description: "`senderId`는 메시지를 보낸 사용자의 고유 식별자이며, `nickname`은 채팅 화면에 표시될 사용자명입니다."
+ *     summary: 채팅 메시지 전송 및 일정 관리
+ *     description: 사용자의 채팅 메시지를 MongoDB에 저장하고, 일정 관련 명령어를 처리합니다.
  *     tags: [Chat]
  *     requestBody:
  *       required: true
@@ -26,16 +29,16 @@ const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/p
  *             properties:
  *               conversationId:
  *                 type: string
- *                 description: "대화방의 고유 ID"
+ *                 description: 대화방의 고유 ID
  *               senderId:
  *                 type: string
- *                 description: "메시지를 보낸 사용자의 고유 식별자 (예: email)"
+ *                 description: 메시지를 보낸 사용자의 고유 식별자 (예: email)
  *               message:
  *                 type: string
- *                 description: "보낼 메시지 내용"
+ *                 description: 보낼 메시지 내용
  *               messageType:
  *                 type: string
- *                 description: "메시지 타입 (예: text, image)"
+ *                 description: 메시지 타입 (예: text, image)
  *               participants:
  *                 type: array
  *                 items:
@@ -43,13 +46,13 @@ const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/p
  *                   properties:
  *                     userId:
  *                       type: string
- *                       description: "대화방에 참여하는 사용자의 고유 식별자"
+ *                       description: 대화방에 참여하는 사용자의 고유 식별자
  *                     nickname:
  *                       type: string
- *                       description: "대화방에 표시될 사용자의 닉네임"
+ *                       description: 대화방에 표시될 사용자의 닉네임
  *     responses:
  *       200:
- *         description: "메시지 전송 성공"
+ *         description: 메시지 및 일정 처리 성공
  *         content:
  *           application/json:
  *             schema:
@@ -57,116 +60,78 @@ const { analyzeUserMessage, executeCalendarCommand } = require('../controllers/p
  *               properties:
  *                 message:
  *                   type: string
- *                   description: "전송 상태 메시지"
+ *                   description: 전송 상태 메시지
  *                 chat:
  *                   type: object
- *                   description: "저장된 채팅 메시지 정보"
- *                 plannerResponse:
- *                   type: string
- *                   description: "일정 관련 응답 메시지"
- *       400:
- *         description: "잘못된 요청"
+ *                   description: 저장된 채팅 메시지 정보
  *       500:
- *         description: "서버 오류"
+ *         description: 서버 오류
  */
 
 router.post('/send-message', async (req, res) => {
     const { conversationId, senderId, message, messageType, participants } = req.body;
 
     try {
-        // MongoDB에서 해당 conversationId의 채팅방 찾기
         let chat = await Chat.findOne({ conversationId });
 
         if (!chat) {
-            // 채팅방이 없으면 새로 생성
             chat = new Chat({
                 conversationId,
                 participants,
                 messages: [{ senderId, message, messageType, timestamp: new Date() }]
             });
         } else {
-            // 기존 채팅방에 메시지 추가
             chat.messages.push({ senderId, message, messageType, timestamp: new Date() });
         }
 
-        const savedChat = await chat.save();
-
-        // 일정 관련 명령어 처리
         let plannerResponse = '';
-        if (message) {
-            try {
-                const command = await analyzeUserMessage(message); // 메시지 분석
-                if (command && command.isCalendarCommand) {
-                    plannerResponse = await executeCalendarCommand(command, senderId); // senderId를 userEmail로 사용
-                }
-            } catch (error) {
-                console.error("일정 처리 중 오류 발생:", error);
-                plannerResponse = "일정 처리 중 오류가 발생했습니다.";
+        const command = await generatePlan(message);
+
+        if (command && command.action) {
+            const { action, title, date, start_time, end_time } = command;
+            if (action === 'add') {
+                plannerResponse = await plannerController.createPlanner({
+                    body: { title, start_day: date, end_day: date, start_time, end_time },
+                    user: { email: senderId }
+                });
+            } else if (action === 'update') {
+                plannerResponse = await plannerController.updatePlannerById({
+                    params: { id: command.id },
+                    body: { title, start_day: date, start_time, end_time },
+                    user: { email: senderId }
+                });
+            } else if (action === 'delete') {
+                plannerResponse = await plannerController.deletePlannerById({
+                    params: { id: command.id },
+                    user: { email: senderId }
+                });
+            } else if (action === 'view') {
+                plannerResponse = await plannerController.getPlannersByDate({
+                    query: { date },
+                    user: { email: senderId }
+                });
             }
+
+            chat.messages.push({
+                senderId: "ChatBot",
+                message: plannerResponse.message || "일정 처리 결과를 가져오는 중 오류 발생",
+                messageType: "text",
+                timestamp: new Date()
+            });
+        } else {
+            chat.messages.push({
+                senderId: "ChatBot",
+                message: "일반 대화 처리 중입니다.",
+                messageType: "text",
+                timestamp: new Date()
+            });
         }
 
-        // 응답 전송
-        res.status(200).json({ message: "메시지가 저장되었습니다.", chat: savedChat, plannerResponse });
+        await chat.save();
+        res.status(200).json({ message: "메시지가 저장되었습니다.", chat });
     } catch (error) {
         console.error("메시지 저장 또는 처리 중 오류 발생:", error);
         res.status(500).json({ message: "메시지 저장 또는 처리 중 오류가 발생했습니다.", error: error.message });
-    }
-});
-
-/**
- * @swagger
- * /chat/messages/{conversationId}:
- *   get:
- *     summary: 특정 대화방의 채팅 기록을 조회합니다.
- *     tags: [Chat]
- *     parameters:
- *       - in: path
- *         name: conversationId
- *         schema:
- *           type: string
- *         required: true
- *         description: 대화방의 ID
- *     responses:
- *       200:
- *         description: 특정 대화방의 메시지 기록 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   senderId:
- *                     type: string
- *                     description: "메시지 보낸 사용자의 ID"
- *                   message:
- *                     type: string
- *                     description: "메시지 내용"
- *                   messageType:
- *                     type: string
- *                     description: "메시지 타입"
- *                   timestamp:
- *                     type: string
- *                     format: date-time
- *                     description: "메시지 전송 시간"
- *       404:
- *         description: 대화방을 찾을 수 없습니다.
- *       500:
- *         description: 메시지 조회 중 오류가 발생했습니다.
- */
-router.get('/messages/:conversationId', async (req, res) => {
-    try {
-        const conversationId = req.params.conversationId;
-        const chat = await Chat.findOne({ conversationId });
-
-        if (chat) {
-            res.status(200).json(chat.messages);
-        } else {
-            res.status(404).json({ message: "대화방을 찾을 수 없습니다." });
-        }
-    } catch (error) {
-        console.error("메시지 조회 중 오류 발생:", error);
-        res.status(500).json({ message: "메시지 조회 중 오류가 발생했습니다.", error: error.message });
     }
 });
 
