@@ -65,8 +65,7 @@ router.post('/', async (req, res) => {
 
         // MongoDB에 새 사용자 생성 (email을 _id로 사용, password만 저장)
         const newMongoUser = new MongoUser({
-            _id: email,  // MongoDB에서 _id에 email 저장
-            password: hashedPassword
+            _id: email  // MongoDB에서 _id에 email 저장
         });
         await newMongoUser.save();
 
