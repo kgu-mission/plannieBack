@@ -56,7 +56,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // /api-doc
 // 라우터 설정
 app.use('/', indexRouter);                       // 기본 라우터 (홈페이지 등)
 app.use('/users', usersRouter);                  // 사용자 관련 라우트
-app.use('/planner', plannerRouter);              // 플래너 관련 라우트
+app.use('/planner', authenticateToken, plannerRouter); // 인증 미들웨어 적용된 플래너 라우트
 app.use('/signup', signupRouter);                // 회원가입 라우트
 app.use('/auth', authRouter);                    // 로그인 라우트
 app.use('/user', authenticateToken, userProfileRouter); // 인증 미들웨어 적용된 회원정보 수정 및 탈퇴 라우트
