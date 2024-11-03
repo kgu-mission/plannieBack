@@ -1,32 +1,28 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // Sequelize 설정 파일 import
-const moment = require('moment'); // 날짜 포맷팅을 위해 moment 라이브러리 사용
+const sequelize = require('../config/database');
+const moment = require('moment');
 
 const Planner = sequelize.define('Planner', {
     start_day: {
         type: DataTypes.DATEONLY,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
         get() {
             const rawValue = this.getDataValue('start_day');
             return rawValue ? moment(rawValue).format('YYYY.MM.DD') : null;
         },
         set(value) {
-            const parsedDate = moment(value, 'YYYY.MM.DD').format('YYYY-MM-DD');
-            this.setDataValue('start_day', parsedDate);
+            this.setDataValue('start_day', moment(value, 'YYYY.MM.DD').format('YYYY-MM-DD'));
         }
     },
     end_day: {
         type: DataTypes.DATEONLY,
         allowNull: true,
-        defaultValue: DataTypes.NOW,
         get() {
             const rawValue = this.getDataValue('end_day');
             return rawValue ? moment(rawValue).format('YYYY.MM.DD') : null;
         },
         set(value) {
-            const parsedDate = moment(value, 'YYYY.MM.DD').format('YYYY-MM-DD');
-            this.setDataValue('end_day', parsedDate);
+            this.setDataValue('end_day', moment(value, 'YYYY.MM.DD').format('YYYY-MM-DD'));
         }
     },
     title: {
