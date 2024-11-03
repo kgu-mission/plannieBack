@@ -80,10 +80,10 @@ router.get('/:id', plannerController.getPlannerById);
  *                 description: 일정 제목
  *               start_day:
  *                 type: string
- *                 description: 시작 날짜 (YYYY.MM.DD dddd 형식)
+ *                 description: 시작 날짜 (YYYY.MM.DD 형식)
  *               end_day:
  *                 type: string
- *                 description: 종료 날짜 (YYYY.MM.DD dddd 형식)
+ *                 description: 종료 날짜 (YYYY.MM.DD 형식)
  *               start_time:
  *                 type: string
  *                 description: 시작 시간 (HH:MM:SS 형식)
@@ -94,10 +94,12 @@ router.get('/:id', plannerController.getPlannerById);
  *                 type: string
  *                 description: 메모
  *               notification:
- *                 type: boolean
+ *                 type: string
+ *                 enum: ["안 함", "5분 전", "10분 전", "15분 전", "30분 전", "1시간 전", "2시간 전", "1일 전", "2일 전"]
  *                 description: 알림 여부
  *               repeat:
- *                 type: integer
+ *                 type: string
+ *                 enum: ["안 함", "월", "화", "수", "목", "금", "토", "일"]
  *                 description: 반복 여부
  *               check_box:
  *                 type: boolean
@@ -141,10 +143,10 @@ router.post('/add', plannerController.createPlanner);
  *                 description: 일정 제목
  *               start_day:
  *                 type: string
- *                 description: 시작 날짜 (YYYY.MM.DD dddd 형식)
+ *                 description: 시작 날짜 (YYYY.MM.DD 형식)
  *               end_day:
  *                 type: string
- *                 description: 종료 날짜 (YYYY.MM.DD dddd 형식)
+ *                 description: 종료 날짜 (YYYY.MM.DD 형식)
  *               start_time:
  *                 type: string
  *                 description: 시작 시간 (HH:MM:SS 형식)
@@ -155,10 +157,12 @@ router.post('/add', plannerController.createPlanner);
  *                 type: string
  *                 description: 메모
  *               notification:
- *                 type: boolean
+ *                 type: string
+ *                 enum: ["안 함", "5분 전", "10분 전", "15분 전", "30분 전", "1시간 전", "2시간 전", "1일 전", "2일 전"]
  *                 description: 알림 여부
  *               repeat:
- *                 type: integer
+ *                 type: string
+ *                 enum: ["안 함", "월", "화", "수", "목", "금", "토", "일"]
  *                 description: 반복 여부
  *               check_box:
  *                 type: boolean

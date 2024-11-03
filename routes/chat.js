@@ -74,27 +74,28 @@ router.post('/send-message', async (req, res) => {
     const { conversationId, senderId, message, messageType, participants } = req.body;
 
     try {
-        // 1. 새로운 채팅 메시지를 MongoDB에 저장
+        // MongoDB에서 해당 conversationId의 채팅방 찾기
         let chat = await Chat.findOne({ conversationId });
 
         if (!chat) {
+            // 채팅방이 없으면 새로 생성
             chat = new Chat({
                 conversationId,
                 participants,
                 messages: [{ senderId, message, messageType, timestamp: new Date() }]
             });
         } else {
+            // 기존 채팅방에 메시지 추가
             chat.messages.push({ senderId, message, messageType, timestamp: new Date() });
         }
 
         const savedChat = await chat.save();
 
-        // 2. 일정 관련 명령어인지 확인하고, 해당 명령어를 분석하여 MariaDB와 상호작용
+        // 일정 관련 명령어 처리
         let plannerResponse = '';
         if (message) {
             try {
                 const command = await analyzeUserMessage(message); // 메시지 분석
-                // 일정 명령어일 때만 executeCalendarCommand를 호출
                 if (command && command.isCalendarCommand) {
                     plannerResponse = await executeCalendarCommand(command, senderId); // senderId를 userEmail로 사용
                 }
@@ -104,7 +105,7 @@ router.post('/send-message', async (req, res) => {
             }
         }
 
-        // 3. 응답 전송
+        // 응답 전송
         res.status(200).json({ message: "메시지가 저장되었습니다.", chat: savedChat, plannerResponse });
     } catch (error) {
         console.error("메시지 저장 또는 처리 중 오류 발생:", error);

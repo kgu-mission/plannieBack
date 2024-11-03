@@ -18,11 +18,11 @@ exports.createPlanner = async (req, res) => {
             url
         } = req.body;
 
-        const parsedStartDay = moment(start_day, 'YYYY.MM.DD dddd', true);
-        const parsedEndDay = end_day ? moment(end_day, 'YYYY.MM.DD dddd', true) : null;
+        const parsedStartDay = moment(start_day, 'YYYY.MM.DD', true);
+        const parsedEndDay = end_day ? moment(end_day, 'YYYY.MM.DD', true) : null;
 
         if (!parsedStartDay.isValid() || (end_day && !parsedEndDay.isValid())) {
-            return res.status(400).json({ error: '올바른 날짜 형식이 아닙니다. YYYY.MM.DD dddd 형식으로 입력하세요.' });
+            return res.status(400).json({ error: '올바른 날짜 형식이 아닙니다. YYYY.MM.DD 형식으로 입력하세요.' });
         }
 
         const newPlanner = await Planner.create({

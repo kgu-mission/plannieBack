@@ -9,10 +9,10 @@ const Planner = sequelize.define('Planner', {
         defaultValue: DataTypes.NOW,
         get() {
             const rawValue = this.getDataValue('start_day');
-            return rawValue ? moment(rawValue).format('YYYY.MM.DD dddd') : null;
+            return rawValue ? moment(rawValue).format('YYYY.MM.DD') : null;
         },
         set(value) {
-            const parsedDate = moment(value, 'YYYY.MM.DD dddd').format('YYYY-MM-DD');
+            const parsedDate = moment(value, 'YYYY.MM.DD').format('YYYY-MM-DD');
             this.setDataValue('start_day', parsedDate);
         }
     },
@@ -22,10 +22,10 @@ const Planner = sequelize.define('Planner', {
         defaultValue: DataTypes.NOW,
         get() {
             const rawValue = this.getDataValue('end_day');
-            return rawValue ? moment(rawValue).format('YYYY.MM.DD dddd') : null;
+            return rawValue ? moment(rawValue).format('YYYY.MM.DD') : null;
         },
         set(value) {
-            const parsedDate = moment(value, 'YYYY.MM.DD dddd').format('YYYY-MM-DD');
+            const parsedDate = moment(value, 'YYYY.MM.DD').format('YYYY-MM-DD');
             this.setDataValue('end_day', parsedDate);
         }
     },
