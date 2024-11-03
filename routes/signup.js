@@ -6,7 +6,6 @@ const User = require('../models/User'); // MariaDB User 모델 가져오기
 const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기
 const router = express.Router();
 
-// 회원가입 라우터
 router.post('/', async (req, res) => {
     try {
         const { email, password, nickname, name, phone, address, birth, gender, profileimg } = req.body;
@@ -24,27 +23,16 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: '닉네임을 입력해주세요.' });
         }
 
-        // 이메일 중복 확인 (MariaDB)
+        // MariaDB에서 이메일 중복 확인
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ error: '이미 등록된 이메일입니다.' });
         }
 
-        // 이메일 중복 확인 (MongoDB)
-        const existingMongoUser = await MongoUser.findOne({ _id: email });
+        // MongoDB에서 이메일 중복 확인
+        const existingMongoUser = await MongoUser.findOne({ email });
         if (existingMongoUser) {
             return res.status(400).json({ error: '이미 등록된 이메일입니다.' });
-        }
-
-        // 관리자 계정 바로 접속
-        if (email === 'admin' && password === 'plannie1228') {
-            return res.status(201).json({ message: '관리자 계정으로 접속되었습니다.', user: { email, nickname: 'Admin' } });
-        }
-
-        // 비밀번호 유효성 검사
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).+$/;
-        if (password.length < 8 || !passwordRegex.test(password)) {
-            return res.status(400).json({ error: '비밀번호는 최소 8자 이상이어야 하며, 영문자, 숫자, 특수문자를 포함해야 합니다.' });
         }
 
         // 비밀번호 암호화
@@ -63,9 +51,10 @@ router.post('/', async (req, res) => {
             profileimg
         });
 
-        // MongoDB에 새 사용자 생성 (email만 저장)
+        // MongoDB에 새 사용자 생성 (email을 _id와 email 필드 모두에 저장)
         const newMongoUser = new MongoUser({
-            _id: email  // MongoDB에서 _id에 email 저장
+            _id: email,
+            email: email
         });
         await newMongoUser.save();
 
