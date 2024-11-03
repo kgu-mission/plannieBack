@@ -1,6 +1,7 @@
-const Planner = require('../models/planner');
+// controllers/plannerController.js
+const Planner = require('../models/Planner');
 const moment = require('moment');
-const {Op} = require("sequelize");
+const { Op } = require("sequelize");
 moment.locale('ko'); // 로케일 설정
 
 // 유효한 ENUM 값 설정
@@ -60,7 +61,7 @@ exports.createPlanner = async (req, res) => {
 
 // 특정 날짜의 일정 조회 컨트롤러
 exports.getPlannersByDate = async (req, res) => {
-    const { date } = req.query; // 날짜는 쿼리 파라미터로 받음
+    const { date } = req.query;
     const userEmail = req.user.email;
 
     try {
@@ -96,7 +97,7 @@ exports.getPlannerById = async (req, res) => {
             res.status(404).json({ message: "일정을 찾을 수 없습니다." });
         }
     } catch (error) {
-        console.error(error);
+        console.error("일정 ID 조회 오류 발생:", error);
         res.status(500).json({ message: "일정 조회 중 오류가 발생했습니다." });
     }
 };
@@ -147,13 +148,12 @@ exports.updatePlannerById = async (req, res) => {
             notification: notificationValue,
             repeat: repeatValue,
             check_box,
-            url,
-            userEmail: req.user.email
+            url
         });
 
         res.status(200).json({ message: "일정이 수정되었습니다." });
     } catch (error) {
-        console.error(error);
+        console.error("일정 수정 중 오류 발생:", error);
         res.status(500).json({ message: "일정 수정 중 오류가 발생했습니다." });
     }
 };
@@ -171,14 +171,14 @@ exports.deletePlannerById = async (req, res) => {
         await planner.destroy();
         res.status(200).json({ message: "일정이 삭제되었습니다." });
     } catch (error) {
-        console.error(error);
+        console.error("일정 삭제 중 오류 발생:", error);
         res.status(500).json({ message: "일정 삭제 중 오류가 발생했습니다." });
     }
 };
 
 // 특정 년도와 월에 대한 일정 조회 컨트롤러
 exports.getPlannersByMonth = async (req, res) => {
-    const { year, month } = req.query; // 클라이언트로부터 년도와 월을 쿼리 파라미터로 받음
+    const { year, month } = req.query;
     const userEmail = req.user.email;
 
     try {
@@ -202,11 +202,9 @@ exports.getPlannersByMonth = async (req, res) => {
             order: [['start_day', 'ASC'], ['start_time', 'ASC']]
         });
 
-        // 조회된 일정이 없을 경우
         res.status(200).json(planners.length > 0 ? planners : { message: '해당 월에 일정이 없습니다.' });
     } catch (error) {
         console.error("월간 일정 조회 중 오류 발생:", error.message, error.stack);
         res.status(500).json({ message: "월간 일정 조회 중 오류가 발생했습니다.", error: error.message });
     }
 };
-

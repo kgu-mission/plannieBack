@@ -1,6 +1,4 @@
 // controllers/processRequest.js
-const Planner = require('../models/Planner');
-const moment = require('moment');
 const { generatePlan } = require('../openai'); // OpenAI API 호출
 
 async function analyzeUserMessage(message) {
