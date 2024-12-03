@@ -1,5 +1,5 @@
 // controllers/userController.js
-const User = require('../models/User');
+const User = require('../models/user');
 
 exports.checkUserEmail = async (req, res) => {
     const { email } = req.params;

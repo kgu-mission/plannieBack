@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const moment = require('moment-timezone'); // moment-timezone 가져오기
-const User = require('../models/User'); // MariaDB User 모델 가져오기
+const User = require('../models/user'); // MariaDB User 모델 가져오기
 const MongoUser = require('../models/MongoUser'); // MongoDB User 모델 가져오기
 const Chat = require('../models/Chat'); // MongoDB Chat 모델 가져오기
 const { v4: uuidv4 } = require('uuid'); // UUID 생성 라이브러리

@@ -29,13 +29,19 @@ router.post('/send-message2', async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: `당신은 일정을 관리하는 유용한 도우미입니다.
-                        사용자의 요청에 따라 일정을 자연어로 설명하면서, 일정에 대한 명확한 지시가 없는 경우 무엇을 할지 명확히 물어보십시오.`,
+                        content: `당신은 일정 관리 도우미입니다.
+            사용자의 자연어 입력에서 다음 정보를 추출하세요:
+            - action: '생성', '조회', '수정', '삭제' 중 하나
+            - date: YYYY-MM-DD 형식으로 날짜
+            - start_time: HH:mm 형식의 시작 시간
+            - end_time: HH:mm 형식의 종료 시간
+            - title: 일정을 설명하는 제목
+            출력은 JSON 형식으로 반환하세요. 필드가 누락되었을 경우, null을 사용하세요.`,
                     },
                     { role: "user", content: message }
                 ],
                 max_tokens: 300,
-                temperature: 0.7,
+                temperature: 0.5,
             });
 
             const botReply = response.choices[0]?.message?.content?.trim() || "응답을 생성하지 못했습니다.";
@@ -100,8 +106,8 @@ const extractDetailsFromNaturalLanguage = (response) => {
 
     // title 추출
     // 특정 키워드(일정, 스터디, 공부 등) 뒤에 오는 내용에서 조사를 포함한 단어를 제목으로 추출
-    const titleMatch = response.match(/(?:일정|스터디|회의|이벤트|작업|공부)\s*([^생성조회수정삭제추가]+?)\s*(?:를|을|에)?\s*(?=생성|조회|수정|삭제|추가)?/);
-    const title = titleMatch ? titleMatch[1].trim() : "일정"; // 기본값으로 '일정' 설정
+    const titleMatch = response.match(/(?:생일|스터디|회의|이벤트|작업|공부)\s*([^생성조회수정삭제추가]+?)\s*(?:를|을|에)?\s*(?=생성|조회|수정|삭제|추가)?/);
+    const title = titleMatch ? titleMatch[1].trim() : "생일"; // 기본값으로 '일정' 설정
 
     // 필드가 충분하지 않다면 null을 반환
     if (!action || !date) {

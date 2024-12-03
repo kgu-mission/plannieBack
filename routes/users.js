@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../utils/jwtHelper'); // jwtHelper에서 토큰 생성 함수 가져오기
 const userController = require('../controllers/userController');

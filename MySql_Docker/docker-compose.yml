@@ -1,0 +1,22 @@
+version: "3"
+services:
+  db:
+    image: mariadb:latest  # MySQL에서 MariaDB로 변경
+    platform: linux/x86_64
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234  # MariaDB도 동일하게 사용
+      MYSQL_DATABASE: mysqldb
+      MYSQL_USER: mission
+      MYSQL_PASSWORD: 1234
+      TZ: Asia/Seoul
+    volumes:
+      - ./db/mariadb/data:/var/lib/mysql  # 경로를 명확히 수정
+      - ./db/mariadb/config:/etc/mysql/conf.d
+      - ./db/mariadb/init:/docker-entrypoint-initdb.d
+
+networks:
+  mariadb_network:
+    driver: bridge

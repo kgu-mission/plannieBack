@@ -66,6 +66,9 @@ const Planner = sequelize.define('Planner', {
         type: DataTypes.STRING,
         allowNull: false
     }
+}, {
+    timestamps: false // createdAt 및 updatedAt 비활성화
 });
+
 
 module.exports = Planner;
