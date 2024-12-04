@@ -1,6 +1,6 @@
 // middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // MariaDB User 모델 가져오기
+const User = require('../models/user'); // MariaDB User 모델 가져오기
 
 // 토큰 인증 미들웨어
 const authenticateToken = async (req, res, next) => {
